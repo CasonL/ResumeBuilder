@@ -4,22 +4,32 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run generate-previews && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-previews": "node scripts/generate-previews.js"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
+    "crypto-js": "^4.2.0",
+    "mammoth": "^1.11.0",
     "next": "16.1.1",
+    "openai": "^4.72.0",
+    "pdfjs-dist": "^5.4.624",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "puppeteer": "^23.0.0",
     "typescript": "^5"
   }
 }

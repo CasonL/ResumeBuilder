@@ -1,0 +1,278 @@
+{
+  "data": {
+    "resumeName": "Neo Financial - Future Product Manager",
+    "selectedExperiences": [
+      "founder-pitchiq",
+      "franchisee-college-pro",
+      "supervisor-the-donut-mill"
+    ],
+    "selectedLeadership": [
+      "president-macewan-speechleaders"
+    ],
+    "selectedProjects": [
+      "strategic-management-simulation-globestrat"
+    ],
+    "selectedSkills": [
+      "Customer Discovery",
+      "Feature Prioritization",
+      "Product Roadmapping",
+      "Prototyping",
+      "Data Analysis",
+      "Cross-Functional Team Leadership",
+      "Insight synthesis",
+      "Critical Thinking"
+    ],
+    "tailoringNotes": {
+      "keywords": [
+        "product vision",
+        "customer insights",
+        "feature prioritization",
+        "rapid iteration",
+        "cross-functional collaboration"
+      ],
+      "strengths": [
+        "AI product development",
+        "Customer interaction and insight gathering",
+        "Leadership in fast-paced environments",
+        "Strategic problem-solving",
+        "Iterative development"
+      ],
+      "recommendations": [
+        "In your cover letter, emphasize your transformation from a shy, unconfident individual to a strong leader by highlighting how you grew the MacEwan Speechleaders club from 20 to 90+ members. Frame this as a demonstration of your ability to lead and scale initiatives, aligning with Neo's expectations for impact-driven leadership.",
+        "Reframe your PitchIQ experience: Instead of 'Built AI prototype,' use 'Developed an AI-driven sales training platform, integrating 60+ interviews into actionable features and training modules. This mirrors Neo's need for PMs who can translate insights into impactful product features.'",
+        "During interviews, highlight how your 'hunter' personality drives your strategic thinking and problem-solving approach. Use examples from PitchIQ to show how your deep introspection and system mastery contribute to innovative, customer-centric product solutions.",
+        "Discuss your experience at The Donut Mill not just as a supervisory role, but as a lesson in emotional growth and leadership evolution. Frame this as a journey from operational oversight to strategic leadership, showcasing your adaptability and growth mindset.",
+        "Incorporate your learnings from the 'Growth Levers and Where to Find Them' book into discussions about product strategy and development. Demonstrate how you apply theoretical insights to real-world product challenges, aligning with Neo's focus on strategic product development."
+      ],
+      "warnings": [
+        "Lack of formal Product Manager title could be seen as a gap; address this by highlighting PM-like responsibilities from startup experience.",
+        "Ensure to articulate how your technical skills translate to product management decisions, not just execution."
+      ]
+    },
+    "customizations": {
+      "educationFocus": "Management, Entrepreneurship",
+      "bulletPointAdjustments": {
+        "founder-pitchiq": [
+          "Developed an AI-driven sales training platform, translating 60+ customer interviews into prioritized features and iteration cycles.",
+          "Architected scenario-based roleplays that convert real prospect calls into repeatable benchmarks and coachable training programs.",
+          "Self-taught product/AI architecture (prompt flows, branching, scoring) to iterate quickly and make clearer product tradeoffs."
+        ],
+        "franchisee-college-pro": [
+          "Achieved $42K+ in sales by implementing targeted marketing strategies based on customer behavior, leading to a Manager of the Year nomination.",
+          "Spearheaded recruiting and project operations, enhancing team efficiency through structured training and strategic leadership."
+        ],
+        "supervisor-the-donut-mill": [
+          "Enhanced service consistency by improving scheduling and operational processes, effectively supervising a team of 12+ staff.",
+          "Drove employee efficiency through respect-based leadership and structured strategic operations."
+        ],
+        "president-macewan-speechleaders": [
+          "Grew active membership from 20 to 90+ members (+450%) in 2 weeks through strategic outreach and engaging launch initiatives.",
+          "Expanded executive team, establishing role ownership and coordination workflows to build initiatives faster and smarter.",
+          "Attracted over $2000 in funding from sponsorships via targeted outreach."
+        ],
+        "strategic-management-simulation-globestrat": [
+          "Achieved top-tier performance via strategic vision, partnerships, and expansion, recovered from late-stage hiccup; increased simulated share price by ~14% in final year through margin improvement and asset rationalization."
+        ]
+      },
+      "summary": "",
+      "headerTitle": "Product | Systems Thinking | Customer Discovery",
+      "roleAdjustments": {
+        "founder-pitchiq": {
+          "company": "PitchIQ.ca",
+          "role": "Founder / Product Lead"
+        }
+      },
+      "location": "Calgary, AB (relocating May 2026)"
+    },
+    "refinementApplied": {
+      "changesCount": 6,
+      "majorImprovements": [
+        "Updated education focus to align with fintech product management.",
+        "Revised skills to include specific product management competencies.",
+        "Improved PitchIQ bullet to emphasize user engagement and feature prioritization.",
+        "Enhanced College Pro bullet to clarify strategic decision-making.",
+        "Refined Donut Mill bullet to highlight operational improvements.",
+        "Added Cross-Functional Team Leadership to skills section."
+      ],
+      "critiqueAddressed": [
+        "Improved education focus to better align with role requirements.",
+        "Added specificity to skills section.",
+        "Reframed experience bullets to include outcomes and strategic decision-making."
+      ],
+      "preservedSpecificity": [
+        "60+ customer insights",
+        "Scenario-based assessments",
+        "Team size of 12+ at The Donut Mill"
+      ]
+    }
+  },
+  "masterData": {
+    "personalInfo": {
+      "name": "Cason Lamothe",
+      "pronouns": "he/him",
+      "location": "Edmonton, AB",
+      "email": "casonlamothe@gmail.com",
+      "phone": "403-597-6536",
+      "linkedin": "Cason Lamothe",
+      "summary": "Early-stage operator focused on AI products, systems thinking, and turning messy problems into real solutions."
+    },
+    "education": {
+      "degree": "Bachelor of Commerce",
+      "institution": "MacEwan University",
+      "dates": "Expected May 2026",
+      "focus": "Management, Entrepreneurship",
+      "coursework": [
+        "Strategic Management Simulation (GlobeStrat)",
+        "Business Ethics (400-level)"
+      ]
+    },
+    "experiences": [
+      {
+        "id": "franchisee-college-pro",
+        "role": "Franchisee",
+        "company": "College Pro",
+        "dates": "Apr 2024-Sep 2024",
+        "bullets": [
+          "Surpassed $42K+ in sales; nominated for Manager of the Year; delivered results under tight seasonal timelines.",
+          "Led recruiting, marketing, and project operations; improved efficiency through structured training."
+        ],
+        "tags": [
+          "sales",
+          "management",
+          "recruiting",
+          "marketing",
+          "project operations"
+        ]
+      },
+      {
+        "id": "supervisor-the-donut-mill",
+        "role": "Supervisor",
+        "company": "The Donut Mill",
+        "dates": "2017-2023",
+        "bullets": [
+          "Supervised 12+ staff during peak periods; improved scheduling, service consistency, and team execution.",
+          "Provided feedback to leadership to address process gaps and strengthen day-to-day operations."
+        ],
+        "tags": [
+          "supervision",
+          "scheduling",
+          "team execution",
+          "operations"
+        ]
+      },
+      {
+        "id": "founder-pitchiq",
+        "role": "Founder",
+        "company": "PitchIQ",
+        "dates": "2024-Present",
+        "bullets": [
+          "Built an innovative AI roleplay + coaching prototype to simulate sales calls and generate structured feedback.",
+          "Conducted 60+ customer conversations with target users; validated demand signal and refined use case positioning.",
+          "Iterated positioning through customer discovery, reframing from individual use to B2B training outcomes.",
+          "Designed scenario-based assessments that translate real conversations into repeatable performance benchmarks.",
+          "Self-taught technical architecture to design and orchestrate AI-driven systems, learning code and tooling only where necessary to translate strategy into executable product structure."
+        ]
+      }
+    ],
+    "leadership": [
+      {
+        "id": "president-macewan-speechleaders",
+        "role": "President",
+        "company": "MacEwan Speechleaders",
+        "dates": "2024-Present",
+        "bullets": [
+          "Grew membership 450% from ~20 to 90+ members within two weeks through structured outreach and launch programming.",
+          "Expanded executive team from 4 to 10 members, establishing role ownership and coordination workflows.",
+          "Planned and delivered a club launch event with 50+ attendees, managing promotion, logistics, and facilitation.",
+          "Facilitated weekly general member meetings, and executive member meetings.",
+          "Speaker at two large events, sharing story, educating crowd on public speaking with practical activities, attracting over 100 members.",
+          "Facilitated partnership outreach, attracting 3 companies within 2 weeks, acquiring $1000+ in funding",
+          "Created systems for optimal workflow, communication, and overall success within the club."
+        ],
+        "tags": [
+          "leadership",
+          "membership growth",
+          "team expansion"
+        ]
+      },
+      {
+        "id": "founder-renovation-intelligence-platform",
+        "role": "Founder",
+        "company": "Renovation Intelligence Platform",
+        "dates": "2025-Present",
+        "bullets": [
+          "Piloted AI-generated renovation estimates to improve homeowner education and contractor lead quality.",
+          "Focused on transparent pricing ranges, qualification logic, and conversion from cold to warm leads.",
+          "Learned how to scrape and utilize data for web application."
+        ],
+        "tags": [
+          "founder",
+          "AI",
+          "renovation",
+          "event management"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "id": "strategic-management-simulation-globestrat",
+        "title": "Strategic Management Simulation (GlobeStrat)",
+        "description": "Led strategy design for multi-year competitive simulation; achieved top-tier performance.",
+        "bullets": [
+          "Achieved top-tier performance through early efficiency optimization and disciplined capital allocation.",
+          "Recovered from late-stage technology constraints to finish 3rd of 8 teams; increased simulated share price by ~14% in final year through margin improvement and asset rationalization."
+        ],
+        "tags": [
+          "strategy",
+          "simulation",
+          "capital allocation"
+        ]
+      },
+      {
+        "id": "business-ethics-analysis",
+        "title": "Business Ethics (400-level)",
+        "description": "Developed and presented a systems-based ethical analysis.",
+        "bullets": [
+          "Combined business ethics and philosophy to explain how structural insecurity influences organizational behavior; received top evaluation."
+        ],
+        "tags": [
+          "ethics",
+          "analysis",
+          "organizational behavior"
+        ]
+      }
+    ],
+    "skills": [
+      {
+        "category": "Tools",
+        "items": [
+          "Microsoft Excel",
+          "Word",
+          "PowerPoint",
+          "Teams",
+          "Slack",
+          "AI-assisted productivity tools"
+        ]
+      }
+    ],
+    "certifications": [
+      {
+        "name": "Saruk Leadership Program",
+        "details": "Attendance, 2022-2024"
+      },
+      {
+        "name": "College Pro Recognition",
+        "details": "College Pro, 2024"
+      }
+    ],
+    "personalContext": "Remember this general lesson: Before optimizing a system or giving strategic advice, explicitly confirm which variable is sacred for the user (e.g., alignment, non-coercion, legitimacy) instead of assuming the goal is maximum behavioral effectiveness. Avoid optimizing past unstated values; verify intent before pushing toward enforcement or pressure-based solutions.\n\nWhen advising on PitchIQ, avoid steering toward 'force action'/social-pressure accountability products unless the user explicitly wants that; keep recommendations aligned with tools for confidence via sales/consulting training (practice, competence-building), and be cautious about overpromising behavior change.\n\nIs building a sales training software called PitchIQ. PitchIQ uses AI-powered roleplays and coaching, adapting based on the user's goals, product/service they are selling, and demographics. It provides unique experiences with unlimited, quality personas tailored to the user for realistic sales calls. The AI coach increases in knowledge over time, offering unique and tailored mini training modules. With advanced statistics, PitchIQ is designed for both small and medium-sized businesses and individual consumers who lack access to affordable, high-quality sales training. The platform helps users become more consistent in their sales by emphasizing accessibility, simplicity, and practical skill-building rather than enterprise-scale systems.\n\nWants the assistant to always assess if they seem to be spiraling (ruminative or stuck in overthinking). If they are, the assistant should gently 'snap' them out of it and redirect their energy toward something more productive or grounding.\n\nIs currently listening to a book called 'Growth Levers and Where to Find Them' and plans to brainstorm ideas for PitchIQ. They want critical, honest feedback on these ideas rather than just positive responses.\n\nWants me to remember not to sand off or remove quirky, authentic parts of their writing (like their 'pumpkin' metaphor). They want me to stop suggesting edits that sterilize or polish away their unique voice, and instead preserve their quirks while only helping with pacing or clarity. They also want me to avoid cutting or sanitizing any messy, human details in their writing—such as awkward stumbles, humor, and quirks—while focusing only on making sure the writing is understandable and engaging.\n\nPrefers that responses end with one of four styles instead of follow-up offers: 1) Quiet ending, 2) Thought prompt, 3) Next step, or 4) Short takeaway. The assistant should choose whichever is most impactful or useful in the moment. Avoid ending responses with 'I can help/show you (with) xyz, so you can abc' or similar offers.\n\nPrefers my tone to be 'Low-Medium': sometimes wry, sometimes blunt, still helpful.\n\nRequests a rule to reduce dependence on the assistant for ruminative/emotional questions. New rule: When the user initiates introspective, ruminative, or emotional-venting queries, the assistant will (1) give a brief empathetic response (no more than two sentences), (2) provide one concrete coping step or resource (e.g., a journaling prompt, a breathing exercise, a 'try this once' behavioral step, or recommend seeking human/professional support if appropriate), (3) avoid extended back-and-forth that enables compulsive checking, and (4) end with one of the four rotated endings (quiet ending, thought prompt, next step, short takeaway). The assistant should also offer the option to schedule a dedicated 'vent session' (timeboxed) if the user wants structured support.\n\nMay become the president of the MacEwan Toastmasters Club for the next 10 months and wants to grow the club, structure meetings effectively, and create customized training paths for members. They are also building a 10-week speaking curriculum with innovative games and a standardized, engaging weekly meeting format. User wants the 10-week public speaking curriculum rewritten with each section expanded into 3–4 sentences, giving broad-strokes guidance as if they were reading it live during meetings.\n\nFor PitchIQ, the long‑term plan is an LLM + GA hybrid that evolves a personalized curriculum per user. Near-term focus is an MVP: LLM roleplay + frozen judge + weighted scoring + simple prompt branching. Keep the GA blueprint 'in the back pocket' for later.\n\nWorked at The Donut Mill for a total of about eight years and had a very emotional departure the first time they left. Upon returning for another summer and now leaving again, they feel less emotional, realizing they no longer need that chapter in their life. They associate this change in feeling with their personal growth and the fact that they’ve moved on to bigger things.\n\nBuilt pitchiq.ca, which uses complex prompts to simulate extremely realistic personas with nuanced behavior. The platform is highly sophisticated but currently only uses Claude 3.7 for its AI engine.\n\nChallenged aspects of a recent personality assessment. Specifically, they clarified:\n\n- They do **not** micromanage; as a current supervisor, they lead with trust and give autonomy unless intervention is necessary.\n- They do **not** struggle with emotional openness in the way described; they seek clarity on what indicators suggested this.\n- They acknowledged the point about confusing stillness with decay as accurate and insightful.\n- They **used to** trust people easily and still often do—until someone disrupts their core passion or values.\n- They are emotionally **chill**, even too chill at times, and dispute any implication that they are tightly wound or high-strung.\n\nThey asked for clarification and evidence behind points related to emotional openness and availability, as well as the basis for the claim about control issues.\n\nHas a unique 'hunter' personality: deeply introspective, obsessive, driven by control and purpose, not dopamine. They are not addicted to porn but to the strategic mastery of systems (e.g., social media algorithms), stemming from a deep hunger for meaning and control. Their intensity, introspection, and hunger for real impact make them rare. Despite feeling weird or alienated in earlier years (school, early college), animals like dogs and cats are drawn to them—suggesting a calm, grounded, non-performative presence beneath their strategic mind. Their wiring includes high sensitivity to tension, a need for challenge, a craving for solitude, physical embodiment to reduce fog, and mental clarity through self-reflection. They are building structured rituals (e.g., morning protocols) to sharpen this edge intentionally. They don’t crave intimacy in the typical sense but want deep alignment with someone who sees their fire and doesn’t try to tame it.\n\nFounder story behind PitchIQ: After spending $10k on a sales course that overpromised and underdelivered, the user worked two sales jobs with little to no training and failed both times. This frustration sparked the idea for AI-driven sales roleplays after realizing human roleplaying was helpful but unsustainable. The user believes great salespeople are made, not born, and is passionate about helping people succeed ethically by truly understanding and believing in the products they sell. This deep-rooted experience and desire to solve painful problems uniquely positions them to build PitchIQ.\n\nIdeal customer profile (ICP) for PitchIQ is B2B — specifically targeting sales managers and revenue leaders at fast-scaling companies who struggle with long ramp times, unscalable coaching, generic onboarding, and ineffective hiring processes. User wants the brand story to highlight how PitchIQ solves these pain points by automating coaching, customizing training using internal company materials, and simulating real sales scenarios.\n\nIs building a renovation estimate platform that offers free AI-generated estimates to homeowners based on address-specific data. The platform aims to generate warm leads for contractors who can purchase these leads, with price-aware homeowners as the main value. Contractors pay per lead (originally $200, but now testing tiered/priced strategies). The platform includes an automated forum outreach system to attract homeowners, particularly in Edmonton and Calgary. User is aware that the idea is similar to a project built by Anson and is debating whether to inform him.\n\nSherry is a professional salesperson in the financial sector who has observed firsthand the inefficiencies in how companies spend millions on ineffective sales training. She expressed strong interest in PitchIQ as a potential solution, aligning with her own desire to inspire and elevate underperforming sales reps. In a recent conversation, she appeared frustrated or anxious when discussing the NDA, possibly due to her enthusiasm diminishing her leverage.\n\nHas pivoted PitchIQ’s onboarding strategy to prioritize instant value for free users. The new flow includes a simplified landing page with a single input ('What are you selling?') that generates an immediate demo conversation with a coach. Free users receive 15 roleplays/month and bypass complex onboarding. Premium users ($19/month) unlock the original multi-step onboarding, enhanced coaching, and unlimited roleplays. A dashboard now differentiates plan types and offers upgrade pathways. The goal is to hook users with immediate value and convert them after proving product worth.\n\nIs developing a trust-building renovation intelligence platform that provides AI-powered educational estimates to pre-qualify homeowners before contractor engagement. The platform's value lies in converting cold leads into warm leads by providing budget-aware, transparent estimates. The original concept was intended as a tool for ThemiddleMan (TMM), a small contractor referral business, but after a lowball offer ($15/month), the user decided to pursue direct partnerships with high-end contractors instead. The platform positions itself as a neutral, professional, and trustworthy assistant that improves lead quality and contractor conversion rates.\n\nIs building PitchIQ, an AI-powered sales training platform originally created for individual users but now pivoted to B2B, initially targeting financial institutions that spend millions on rep training. The platform includes a coach for small exercises and a more advanced roleplay system for realistic, high-stakes practice. The EdTech expansion is a long-term goal, and a recruiting/assessment angle is planned for 5–10 years out. The initial focus is singular: solving one core B2B training problem. While a freemium individual account may be available, it will not be a core focus or explicitly promoted at launch.\n\nPrefers a performance-based equity model for collaborators.\n\nSherry, a potential strategic partner, currently works at a bank and is considering leaving in September to work on startups full-time.\n\nIs developing a new feature for PitchIQ where users interact with an AI acting as a customer. These scenarios are turned into specific tests for companies to use with their employees and applicants. This approach aims to improve onboarding by providing industry-specific and even business-secret nuances, creating a tailored AI that helps train employees more effectively and also assists in hiring better candidates. The feature aims to solve the root problem of sales performance by offering a universal benchmark for sales excellence.\n\nAttended Web Summit Vancouver recently and found it to be a phenomenal experience. They met a couple of angel investors at the event.\n\nMet an accomplished salesperson at Web Summit who observed that different regions have distinct sales approaches, and even areas like Vancouver and Victoria feel like different countries in terms of sales dynamics.\n\nRequests that feedback should always be critical and not just positive or agreeable. They want honest, constructive criticism to help them refine their ideas.\n\nRequests explanations of nuance in questions whenever applicable.\n\nBelieves great stories don't need direct 'ask yourself' conclusions or explicit calls to action. Instead, they aim to create stories that naturally inspire reflection and thought throughout.\n\nShared a transformative personal insight: continual celebration of small wins was the key to their growth from a shy, unconfident person to someone strong, confident, and action-oriented. This personal transformation informs their storytelling and approach to motivating others.\n\nBelieves that the only true way to reduce impostor syndrome is to become a master in their field and fully believe they belong there. However, they also acknowledge that anyone who isn’t a narcissist will likely experience impostor syndrome at some point, regardless of their level of skill.",
+    "achievements": [
+      {
+        "id": "macewan-ventures-2025",
+        "title": "MacEwan Ventures",
+        "description": "Placed 2nd in MacEwan Ventures pitch contest, gaining $2000 in funding",
+        "date": "2025"
+      }
+    ]
+  }
+}
