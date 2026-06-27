@@ -232,8 +232,39 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
           <div style={{ color: '#9ca3af', fontSize: '13px' }}>Loading chat history...</div>
         )}
         {!isLoadingHistory && messages.length === 0 && (
-          <div style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.5 }}>
-            Ask me anything about this resume. I can refine wording, reorder sections, and strengthen bullets. You have {messageLimit} messages — make them count.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+              Ask me anything about this resume. You have {messageLimit} messages — make them count.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {[
+                'Is this resume strong enough to get an interview?',
+                'What do I need to learn to become more qualified for this role?',
+                'Strengthen my weakest bullet points.',
+                'Should I even apply to this role?',
+              ].map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => setInput(q)}
+                  style={{
+                    textAlign: 'left',
+                    padding: '7px 11px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'rgba(255,255,255,0.05)',
+                    color: '#d1d5db',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    lineHeight: 1.4,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
