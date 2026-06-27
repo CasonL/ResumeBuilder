@@ -16,6 +16,8 @@ interface ResumeChatProps {
 }
 
 export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps) {
+  const MAX_MESSAGES = 5;
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,12 +26,15 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
   const [pendingMasterChange, setPendingMasterChange] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const userMessageCount = messages.filter((m) => m.role === 'user').length;
+  const atLimit = userMessageCount >= MAX_MESSAGES;
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || atLimit) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -156,7 +161,19 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
           background: '#1e222d',
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: '14px', color: '#fff' }}>AI Resume Coach</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: 600, fontSize: '14px', color: '#fff' }}>AI Resume Coach</span>
+          <span style={{
+            fontSize: '11px',
+            padding: '2px 7px',
+            borderRadius: '999px',
+            background: atLimit ? 'rgba(168,100,91,0.2)' : 'rgba(255,255,255,0.08)',
+            color: atLimit ? '#c97d4e' : '#9ca3af',
+            fontWeight: 600,
+          }}>
+            {MAX_MESSAGES - userMessageCount}/{MAX_MESSAGES}
+          </span>
+        </div>
         <button
           onClick={() => setIsOpen(false)}
           style={{
@@ -185,7 +202,7 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
       >
         {messages.length === 0 && (
           <div style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.5 }}>
-            Ask me anything about this resume or tell me what to change. I can read the job description, your profile, and the current resume.
+            Ask me anything about this resume. I can refine wording, reorder sections, and strengthen bullets. You have 5 messages — make them count.
           </div>
         )}
 
@@ -241,6 +258,20 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
             Thinking...
           </div>
         )}
+        {atLimit && (
+          <div style={{
+            alignSelf: 'stretch',
+            padding: '10px 12px',
+            borderRadius: '10px',
+            background: 'rgba(139, 94, 60, 0.15)',
+            border: '1px solid rgba(139, 94, 60, 0.3)',
+            color: '#c97d4e',
+            fontSize: '12px',
+            textAlign: 'center',
+          }}>
+            You've used all 5 messages for this resume. Purchase more credits to unlock additional conversations.
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -258,21 +289,23 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask or tell me what to change..."
+          disabled={atLimit}
+          placeholder={atLimit ? 'Message limit reached' : 'Ask or tell me what to change...'}
           style={{
             flex: 1,
             padding: '10px 12px',
             borderRadius: '10px',
             border: '1px solid #2a2f3a',
             background: '#171b24',
-            color: '#fff',
+            color: atLimit ? '#6b7280' : '#fff',
             fontSize: '13px',
             outline: 'none',
+            cursor: atLimit ? 'not-allowed' : 'text',
           }}
         />
         <button
           onClick={handleSend}
-          disabled={isLoading || !input.trim()}
+          disabled={isLoading || !input.trim() || atLimit}
           style={{
             padding: '10px 14px',
             borderRadius: '10px',

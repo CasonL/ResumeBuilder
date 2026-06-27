@@ -126,7 +126,7 @@ export default function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProp
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: '18px', color: 'var(--accent)' }}>
-                ${(pkg.price / 100).toFixed(2)}
+                {pkg.displayPrice} CAD
               </div>
             </button>
           ))}

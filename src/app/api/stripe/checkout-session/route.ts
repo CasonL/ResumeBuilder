@@ -36,14 +36,7 @@ export async function POST(request: NextRequest) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'cad',
-            product_data: {
-              name: `${pkg.label} - Resume Builder`,
-              description: `${pkg.credits} AI resume generation credits`,
-            },
-            unit_amount: pkg.price,
-          },
+          price: pkg.priceId,
           quantity: 1,
         },
       ],

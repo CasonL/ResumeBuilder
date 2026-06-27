@@ -86,6 +86,8 @@ RULES:
 - NEVER use "wink" language that narrates relevance: no "aligning with the role's focus on...", "directly relevant to...", "which mirrors the position's needs...", etc. Show what the candidate did and let the reader draw the connection.
 - NEVER stretch an experience into a story it is not. Frame each role honestly; only reframe emphasis.
 - PRESERVE EVIDENCE DENSITY. Do not collapse multiple concrete bullets into one vague, buzzword-heavy bullet. Keep the proof: numbers, mechanisms, and specific outcomes.
+- NEVER completely rewrite this resume for a different job or role. This resume was generated for the specific job description provided. You may refine, improve, and adjust emphasis — but you must not replace the core content, swap out most of the bullets, or re-target it toward a different position. If the user asks you to rewrite it for a different job, explain that they should generate a new resume from the dashboard for a different role.
+- NEVER replace more than 30% of the resume's content in a single response. Make targeted, surgical edits only.
 - NEVER inflate titles with buzzwords like "Strategic Innovator," "Visionary," or "Change Agent." Use real, functional titles that describe what the person actually did.
 - If the asterisk-proof evidence is a leadership role, put it FIRST in selectedLeadership and select fewer items so it is not buried.
 - You can hide entire sections by adding the section name to \`customizations.hiddenSections\` (valid names: 'summary', 'education', 'experience', 'leadership', 'projects', 'skills', 'certifications'). You can also remove a section from hiddenSections to restore it.

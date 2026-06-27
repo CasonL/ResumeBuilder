@@ -1,5 +1,6 @@
 export const CREDIT_PACKAGES = [
-  { id: 'credits-5', credits: 5, price: 500, label: '5 Credits' },
-  { id: 'credits-12', credits: 12, price: 1000, label: '12 Credits' },
-  { id: 'credits-30', credits: 30, price: 2500, label: '30 Credits' },
-] as const;
+  { id: 'credits-5',  credits: 5,  priceId: 'price_REPLACE_5_CREDITS',  displayPrice: '$4.49',  label: '5 Credits' },
+  { id: 'credits-10', credits: 10, priceId: 'price_REPLACE_10_CREDITS', displayPrice: '$7.98',  label: '10 Credits' },
+  { id: 'credits-20', credits: 20, priceId: 'price_REPLACE_20_CREDITS', displayPrice: '$15.49', label: '20 Credits' },
+  { id: 'credits-50', credits: 50, priceId: 'price_REPLACE_50_CREDITS', displayPrice: '$34.49', label: '50 Credits' },
+];
