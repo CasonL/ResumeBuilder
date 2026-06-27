@@ -38,6 +38,15 @@ USER PREFERENCES:
 - Tone: ${userPrefs.tone} - ${toneGuidance[userPrefs.tone]}${priorityGuidance}
 - Include Achievements: ${userPrefs.includeAchievements ? 'Yes' : 'No'}
 
+STEP 0 - FIT ASSESSMENT (do this first, before selecting or framing anything)
+- Score the candidate's actual fit for this role on a 1–10 scale. Be brutal and honest.
+- A 10 means the candidate has direct, verifiable experience in the core competencies this role requires.
+- A 5 means they have transferable experience that takes some explaining.
+- A 1–3 means they are a long shot — no direct thread, and honest framing will reveal the gap.
+- Identify the SINGLE STRONGEST THREAD (the one thing the candidate has that best maps to this role) and the SINGLE BIGGEST GAP (the competency the JD demands most that the candidate has zero evidence for).
+- Do not rationalize the gap away. Name it clearly.
+- Output this as the "fitAssessment" field in the final JSON.
+
 STEP 1 - IDENTIFY THE ROLE TYPE AND CORE COMPETENCIES
 - Do NOT assume this is a PM or product role. Infer the actual role from the job description.
 - Common roles: HR/People Ops, Executive Operations, Sales, Marketing, Customer Success, Operations, Engineering, Product, Finance, etc.
@@ -184,7 +193,13 @@ These go inside customizations. They must match the target role, not default to 
 
 Return VALID JSON with this exact structure:
 {
-  "resumeName": "string (Role-focused title without the target company name, e.g., 'HR & Executive Operations Coordinator')",
+  "resumeName": "string (Describes the candidate's ACTUAL background and strongest thread, not the target job title. E.g. if candidate is a founder/operator applying to a CS role, say 'Business Development & Operations' — not 'Customer Success Specialist')",
+  "fitAssessment": {
+    "score": "number 1–10",
+    "strongestThread": "the one real thing the candidate has that maps to this role",
+    "biggestGap": "the most important competency the JD demands that the candidate has zero evidence for",
+    "honestTake": "2-3 sentence blunt hiring manager perspective — what works, what's a problem, realistic odds"
+  },
   "selectedExperiences": ["array of experience IDs from masterData.experiences"],
   "selectedLeadership": ["array of leadership IDs from masterData.leadership"],
   "selectedProjects": ["array of project IDs from masterData.projects (only if strongly relevant)"],
@@ -229,6 +244,8 @@ CRITICAL RULES - NEVER VIOLATE:
 - NEVER inflate titles with buzzwords like "Strategic Innovator," "Visionary," or "Change Agent." If you adjust a role title in roleAdjustments, use a real, functional title (e.g., "Business Development Lead," "Operations Coordinator") that describes what the person actually did.
 - HONEST FRAMING beats keyword matching. Do not bend an experience into a story it is not just because the job description uses a tempting word. Use the candidate's actual evidence and let the reader draw the connection.
 - STRICTLY FORBIDDEN: mentioning the target/hiring company's name anywhere in the resume, including resumeName, summary, headerTitle, educationFocus, bullets, skills, or any other field. Before returning, scan every string and remove every occurrence. If you are unsure whether a word is the company name, remove it.
+- NEVER claim competency categories the candidate has no evidence for. If the job wants "contract management" and the candidate has never managed a contract, do NOT put "Contract Management" in skills, do NOT write bullets implying contract management, and do NOT frame customer discovery interviews as account management. A recruiter who knows the role will see through it immediately and it costs the candidate credibility.
+- resumeName must describe the candidate's ACTUAL identity, not the target job title. If the candidate is a founder/franchisee/student leader applying to a contract management role, the resume name should reflect their real background (e.g., "Business Development & Operations"), not what the role is called ("Contract Management Specialist"). Claiming a title you haven't held reads as dishonest.
 
 CREDIBILITY RULES FOR BULLETS:
 1. Claims must show the mechanism: "reduced onboarding time from X days to Y days" > "improved onboarding."

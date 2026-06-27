@@ -183,7 +183,29 @@ export default function ResumePreviewPage() {
       <div className="preview-container">
         <div className="preview-sidebar">
           <h2>AI Recommendations</h2>
-          
+
+          {data.fitAssessment && (() => {
+            const score = Number(data.fitAssessment.score);
+            const color = score >= 7 ? '#86efac' : score >= 5 ? '#fde68a' : '#fca5a5';
+            const label = score >= 7 ? 'Strong Fit' : score >= 5 ? 'Transferable' : 'Long Shot';
+            return (
+              <section className="recommendation-section" style={{ borderLeft: `3px solid ${color}`, paddingLeft: '12px' }}>
+                <h3>Fit Assessment</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '28px', fontWeight: 700, color }}>{score}/10</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+                </div>
+                <p style={{ fontSize: '13px', marginBottom: '10px', lineHeight: 1.5 }}>{data.fitAssessment.honestTake}</p>
+                <p style={{ fontSize: '12px', color: '#86efac', marginBottom: '4px' }}>
+                  <strong>Strongest thread:</strong> {data.fitAssessment.strongestThread}
+                </p>
+                <p style={{ fontSize: '12px', color: '#fca5a5' }}>
+                  <strong>Biggest gap:</strong> {data.fitAssessment.biggestGap}
+                </p>
+              </section>
+            );
+          })()}
+
           <section className="recommendation-section">
             <h3>Resume Name</h3>
             <p className="highlight">{data.resumeName}</p>
