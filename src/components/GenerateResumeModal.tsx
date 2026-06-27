@@ -272,7 +272,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     </div>
                     <p style={{ fontSize: '13px', margin: '0 0 10px', lineHeight: 1.6, color: 'var(--fg, #1a1a1a)' }}>{fitAssessment.honestTake}</p>
                     <p style={{ fontSize: '12px', margin: '0 0 8px', padding: '6px 10px', borderRadius: '6px', background: `${borderColor}14`, color: scoreColor, lineHeight: 1.5 }}>
-                      {score >= 7 ? '✦ Apply directly — your resume speaks for itself here.' : score >= 5 ? '✦ Before submitting: find the hiring manager on LinkedIn and send a brief note. A warm touch on a transferable application can make the difference.' : '✦ High-leverage move: close 1-2 of the gaps below first, or reach out on LinkedIn to learn more about what they actually prioritize before spending the application effort.'}
+                      {score >= 7 ? '✦ Apply directly — your resume speaks for itself here.' : score >= 5 ? '✦ Worth applying — but do it smart. Find the hiring manager on LinkedIn and send a 2-line note before submitting. A brief touchpoint turns a borderline resume into a real conversation.' : '✦ High-leverage move: close 1-2 of the gaps below first, or reach out on LinkedIn to learn what they actually prioritize before spending the application effort.'}
                     </p>
                     <p style={{ fontSize: '12px', margin: '0 0 4px', color: threadColor }}><strong>✓ Strongest thread:</strong> {fitAssessment.strongestThread}</p>
                     <p style={{ fontSize: '12px', margin: '0 0 10px', color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
