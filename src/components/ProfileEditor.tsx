@@ -10,6 +10,7 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
   const [careerGoalsSuccess, setCareerGoalsSuccess] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [dedupSuccess, setDedupSuccess] = useState<string | null>(null);
   const updateField = (section: string, field: string, value: any) => {
     onChange({
       ...data,
@@ -107,6 +108,44 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
     } finally {
       setIsGeneratingSkills(false);
     }
+  };
+
+  const deduplicateProfile = () => {
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+    const dedup = (arr: any[], keyA: string, keyB: string) => {
+      const result: any[] = [];
+      (arr || []).forEach((item) => {
+        const nA = norm(item[keyA] || '');
+        const nB = norm(item[keyB] || '');
+        const idx = result.findIndex((ex) => {
+          const eA = norm(ex[keyA] || '');
+          const eB = norm(ex[keyB] || '');
+          return (nA && eA && (eA.includes(nA) || nA.includes(eA))) ||
+                 (nB && eB && (eB.includes(nB) || nB.includes(eB)));
+        });
+        if (idx >= 0) {
+          const seen = new Set(result[idx].bullets || []);
+          (item.bullets || []).forEach((b: string) => { if (!seen.has(b)) result[idx].bullets.push(b); });
+        } else {
+          result.push({ ...item, bullets: [...(item.bullets || [])] });
+        }
+      });
+      return result;
+    };
+    const cleaned = {
+      ...data,
+      experiences: dedup(data.experiences, 'company', 'role'),
+      leadership: dedup(data.leadership, 'company', 'role'),
+      projects: dedup(data.projects, 'title', 'title'),
+      education: dedup(data.education, 'school', 'degree'),
+    };
+    const removed =
+      (data.experiences?.length - cleaned.experiences.length) +
+      (data.leadership?.length - cleaned.leadership.length) +
+      (data.projects?.length - cleaned.projects.length);
+    onChange(cleaned);
+    setDedupSuccess(removed > 0 ? `Merged ${removed} duplicate entr${removed === 1 ? 'y' : 'ies'}.` : 'No duplicates found.');
+    setTimeout(() => setDedupSuccess(null), 4000);
   };
 
   const parseCareerGoals = async () => {
@@ -300,14 +339,26 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
             placeholder="Example: I'm targeting Product Manager roles in fintech. I founded PitchIQ, an AI-powered sales training platform where I translated 60+ customer conversations into product decisions. I want to emphasize my product thinking, user insight skills, and ability to build in fast-paced environments. My strongest leverage is my hands-on experience building products from 0→1."
           />
         </div>
-        <button
-          onClick={parseCareerGoals}
-          disabled={isParsingCareerGoals || !data.personalContext || data.personalContext.trim().length < 20}
-          className="button-secondary"
-          style={{ marginTop: '8px' }}
-        >
-          {isParsingCareerGoals ? 'Extracting Info...' : 'Extract Info & Update Profile'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={parseCareerGoals}
+            disabled={isParsingCareerGoals || !data.personalContext || data.personalContext.trim().length < 20}
+            className="button-secondary"
+          >
+            {isParsingCareerGoals ? 'Extracting Info...' : 'Extract Info & Update Profile'}
+          </button>
+          <button
+            onClick={deduplicateProfile}
+            className="button-secondary"
+          >
+            Clean Up Duplicates
+          </button>
+        </div>
+        {dedupSuccess && (
+          <div style={{ color: 'var(--success)', fontSize: '14px', marginTop: '8px' }}>
+            ✓ {dedupSuccess}
+          </div>
+        )}
         {careerGoalsError && (
           <div style={{ color: 'var(--error)', fontSize: '14px', marginTop: '8px' }}>
             {careerGoalsError}
