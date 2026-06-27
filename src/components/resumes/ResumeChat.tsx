@@ -16,7 +16,7 @@ interface ResumeChatProps {
 }
 
 export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps) {
-  const MAX_MESSAGES = 5;
+  const BASE_LIMIT = 5;
 
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -24,10 +24,13 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
   const [isLoading, setIsLoading] = useState(false);
   const [pendingChange, setPendingChange] = useState<any>(null);
   const [pendingMasterChange, setPendingMasterChange] = useState<any>(null);
+  const [messageLimit, setMessageLimit] = useState(BASE_LIMIT);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const userMessageCount = messages.filter((m) => m.role === 'user').length;
-  const atLimit = userMessageCount >= MAX_MESSAGES;
+  const atLimit = userMessageCount >= messageLimit;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -171,7 +174,7 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
             color: atLimit ? '#c97d4e' : '#9ca3af',
             fontWeight: 600,
           }}>
-            {MAX_MESSAGES - userMessageCount}/{MAX_MESSAGES}
+            {messageLimit - userMessageCount}/{messageLimit}
           </span>
         </div>
         <button
@@ -261,15 +264,49 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         {atLimit && (
           <div style={{
             alignSelf: 'stretch',
-            padding: '10px 12px',
+            padding: '12px',
             borderRadius: '10px',
-            background: 'rgba(139, 94, 60, 0.15)',
+            background: 'rgba(139, 94, 60, 0.12)',
             border: '1px solid rgba(139, 94, 60, 0.3)',
-            color: '#c97d4e',
             fontSize: '12px',
             textAlign: 'center',
           }}>
-            You've used all 5 messages for this resume. Purchase more credits to unlock additional conversations.
+            <div style={{ color: '#c97d4e', marginBottom: '8px' }}>
+              You've used all {messageLimit} messages for this resume.
+            </div>
+            <button
+              onClick={async () => {
+                setIsUnlocking(true);
+                setUnlockError(null);
+                try {
+                  const res = await fetch(`/api/resumes/${resumeId}/unlock-chat`, { method: 'POST' });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || 'Failed to unlock');
+                  setMessageLimit((prev) => prev + data.extraMessages);
+                } catch (err: any) {
+                  setUnlockError(err.message || 'Could not unlock. Check your credits.');
+                } finally {
+                  setIsUnlocking(false);
+                }
+              }}
+              disabled={isUnlocking}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '8px',
+                background: '#8b5e3c',
+                color: '#fff',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: isUnlocking ? 'wait' : 'pointer',
+                opacity: isUnlocking ? 0.7 : 1,
+              }}
+            >
+              {isUnlocking ? 'Unlocking...' : 'Unlock 10 more messages — 1 credit'}
+            </button>
+            {unlockError && (
+              <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px' }}>{unlockError}</div>
+            )}
           </div>
         )}
         <div ref={messagesEndRef} />
