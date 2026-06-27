@@ -251,26 +251,26 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {fitAssessment && (() => {
                 const score = Number(fitAssessment.score);
-                const color = score >= 7 ? '#86efac' : score >= 5 ? '#fde68a' : '#fca5a5';
+                const borderColor = score >= 7 ? '#16a34a' : score >= 5 ? '#b45309' : '#b91c1c';
+                const scoreColor = score >= 7 ? '#15803d' : score >= 5 ? '#92400e' : '#991b1b';
+                const bgColor = score >= 7 ? 'rgba(22,163,74,0.1)' : score >= 5 ? 'rgba(180,83,9,0.1)' : 'rgba(185,28,28,0.1)';
                 const label = score >= 7 ? 'Strong Fit' : score >= 5 ? 'Transferable' : 'Long Shot';
-                const bgColor = score >= 7 ? 'rgba(22,101,52,0.12)' : score >= 5 ? 'rgba(113,63,18,0.12)' : 'rgba(127,29,29,0.12)';
-                const threadColor = score >= 7 ? '#16a34a' : '#ca8a04';
-                const gapColor = '#dc2626';
+                const threadColor = score >= 7 ? '#15803d' : '#92400e';
                 return (
                   <div style={{
                     padding: '16px 18px',
                     borderRadius: '10px',
                     background: bgColor,
-                    border: `1.5px solid ${color}`,
-                    borderLeft: `4px solid ${color}`,
+                    border: `1.5px solid ${borderColor}`,
+                    borderLeft: `4px solid ${borderColor}`,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '26px', fontWeight: 800, color }}>{score}/10</span>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.07em', background: `${color}22`, padding: '2px 8px', borderRadius: '999px' }}>{label}</span>
+                      <span style={{ fontSize: '26px', fontWeight: 800, color: scoreColor }}>{score}/10</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: scoreColor, textTransform: 'uppercase', letterSpacing: '0.07em', background: `${borderColor}22`, padding: '2px 8px', borderRadius: '999px' }}>{label}</span>
                     </div>
                     <p style={{ fontSize: '13px', margin: '0 0 10px', lineHeight: 1.6, color: 'var(--fg, #1a1a1a)' }}>{fitAssessment.honestTake}</p>
                     <p style={{ fontSize: '12px', margin: '0 0 4px', color: threadColor }}><strong>✓ Strongest thread:</strong> {fitAssessment.strongestThread}</p>
-                    <p style={{ fontSize: '12px', margin: 0, color: gapColor }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
+                    <p style={{ fontSize: '12px', margin: 0, color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
                   </div>
                 );
               })()}
