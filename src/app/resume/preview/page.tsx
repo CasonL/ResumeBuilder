@@ -12,7 +12,6 @@ export default function ResumePreviewPage() {
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
-  const [showGap, setShowGap] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
   const printTitle = generatedData?.data?.resumeName || 'Resume';
@@ -223,27 +222,6 @@ export default function ResumePreviewPage() {
                     <p style={{ fontSize: '12px', margin: 0, color: '#b91c1c' }}>
                       <strong>✗ Biggest gap:</strong> {data.fitAssessment.biggestGap}
                     </p>
-                    {data.fitAssessment.skillsGap?.length > 0 && (
-                      <div style={{ marginTop: '4px' }}>
-                        <button
-                          onClick={() => setShowGap(g => !g)}
-                          style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                        >
-                          {showGap ? '▲ Hide' : '▼ How to close this gap'}
-                        </button>
-                        {showGap && (
-                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {data.fitAssessment.skillsGap.map((item: any, i: number) => (
-                              <div key={i} style={{ fontSize: '12px', lineHeight: 1.5 }}>
-                                <span style={{ fontWeight: 700 }}>{item.skill}</span>
-                                <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 600, color: scoreColor, background: `${borderColor}18`, padding: '1px 6px', borderRadius: '999px' }}>{item.effort}</span>
-                                <p style={{ margin: '2px 0 0', color: 'var(--muted, #555)', fontSize: '12px' }}>{item.path}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
               </section>
