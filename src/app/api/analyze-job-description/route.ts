@@ -162,8 +162,12 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
       const fitPrompt = `You are a senior hiring manager. Score how well this candidate fits this job. Be brutally honest — do not inflate for soft skills or potential.
 
 SCORING RULES (follow exactly):
+0. FIRST — infer the company stage from signals in the JD:
+   - STARTUP signals: "wear many hats", "early team", "Series A/B/C", "fast-paced", "scrappy", "founding team", "we're building from scratch", small headcount.
+   - ENTERPRISE signals: "established processes", "cross-functional stakeholders", "enterprise", "global", "300+ employees", "formal planning cycles", "Fortune 500".
+   - This matters for weighting: at a STARTUP, founder/builder experience (shipped a product, ran discovery, made product decisions solo) counts as DIRECT experience for PM-type roles. At an ENTERPRISE, formal PM credentials (PRDs, roadmaps, A/B testing infrastructure, large cross-functional teams) are required.
 1. Identify the 3-5 MUST-HAVE competencies the role explicitly requires (e.g. "contract renewals", "CRM maintenance", "pricing negotiations", "B2B account management").
-2. For each must-have, determine if the candidate has DIRECT experience (they have literally done that thing) vs TRANSFERABLE (adjacent but not the same thing).
+2. For each must-have, determine if the candidate has DIRECT experience (they have literally done that thing) vs TRANSFERABLE (adjacent but not the same thing). Apply the company stage context from step 0.
 3. DIRECT experience in a must-have = contributes normally to the score.
    TRANSFERABLE but not direct = contributes half credit at most.
    Zero evidence = a hard cap: missing even ONE core must-have keeps the score at 6 or below. Missing two or more caps it at 4 or below.
