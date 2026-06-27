@@ -192,8 +192,43 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
         }
       }
 
+      // Detect duplicates: flag items in merged arrays that share company+role with existing items
+      const normalize = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+
+      const findDuplicates = (existing: any[], added: any[], keyA: string, keyB: string) => {
+        const dupes: string[] = [];
+        added.forEach((newItem) => {
+          const nA = normalize(newItem[keyA]);
+          const nB = normalize(newItem[keyB]);
+          if (!nA && !nB) return;
+          existing.forEach((ex) => {
+            const eA = normalize(ex[keyA]);
+            const eB = normalize(ex[keyB]);
+            if ((nA && eA && eA.includes(nA)) || (nB && eB && eB.includes(nB))) {
+              dupes.push(`"${newItem[keyA] || newItem[keyB]}"`);
+            }
+          });
+        });
+        return [...new Set(dupes)];
+      };
+
+      const dupWarnings: string[] = [];
+      if (extractedData.experiences?.length) {
+        const d = findDuplicates(data.experiences || [], extractedData.experiences, 'company', 'role');
+        if (d.length) dupWarnings.push(`Possible duplicate experience(s): ${d.join(', ')}`);
+      }
+      if (extractedData.leadership?.length) {
+        const d = findDuplicates(data.leadership || [], extractedData.leadership, 'company', 'role');
+        if (d.length) dupWarnings.push(`Possible duplicate leadership: ${d.join(', ')}`);
+      }
+      if (extractedData.projects?.length) {
+        const d = findDuplicates(data.projects || [], extractedData.projects, 'title', 'title');
+        if (d.length) dupWarnings.push(`Possible duplicate project(s): ${d.join(', ')}`);
+      }
+
       onChange(mergedData);
-      setCareerGoalsSuccess('Successfully extracted and added information to your profile!');
+      const dupNote = dupWarnings.length ? ` Check for duplicates: ${dupWarnings.join(' | ')}` : '';
+      setCareerGoalsSuccess(`Extracted and merged new info into your profile.${dupNote}`);
       
     } catch (error) {
       console.error('Error parsing career goals:', error);
@@ -291,7 +326,7 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
           className="button-secondary"
           style={{ marginTop: '8px' }}
         >
-          {isParsingCareerGoals ? '🤖 Extracting Info...' : '🤖 Extract Info & Update Profile'}
+          {isParsingCareerGoals ? 'Extracting Info...' : 'Extract Info & Update Profile'}
         </button>
         {careerGoalsError && (
           <div style={{ color: 'var(--error)', fontSize: '14px', marginTop: '8px' }}>
