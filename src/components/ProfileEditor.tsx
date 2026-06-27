@@ -139,24 +139,39 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
       // Merge extracted data with existing profile
       const mergedData = { ...data };
 
-      // Merge experiences
-      if (extractedData.experiences && extractedData.experiences.length > 0) {
-        mergedData.experiences = [...(data.experiences || []), ...extractedData.experiences];
-      }
+      const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+      const autoMerge = (existing: any[], added: any[], keyA: string, keyB: string) => {
+        const result = existing.map((e) => ({ ...e, bullets: [...(e.bullets || [])] }));
+        added.forEach((newItem) => {
+          const nA = norm(newItem[keyA] || '');
+          const nB = norm(newItem[keyB] || '');
+          const idx = result.findIndex((ex) => {
+            const eA = norm(ex[keyA] || '');
+            const eB = norm(ex[keyB] || '');
+            return (nA && eA && (eA.includes(nA) || nA.includes(eA))) ||
+                   (nB && eB && (eB.includes(nB) || nB.includes(eB)));
+          });
+          if (idx >= 0) {
+            const seen = new Set(result[idx].bullets);
+            (newItem.bullets || []).forEach((b: string) => { if (!seen.has(b)) result[idx].bullets.push(b); });
+          } else {
+            result.push({ ...newItem, id: newItem.id || `merged-${Date.now()}-${Math.random().toString(36).slice(2)}` });
+          }
+        });
+        return result;
+      };
 
-      // Merge leadership
-      if (extractedData.leadership && extractedData.leadership.length > 0) {
-        mergedData.leadership = [...(data.leadership || []), ...extractedData.leadership];
+      if (extractedData.experiences?.length) {
+        mergedData.experiences = autoMerge(data.experiences || [], extractedData.experiences, 'company', 'role');
       }
-
-      // Merge projects
-      if (extractedData.projects && extractedData.projects.length > 0) {
-        mergedData.projects = [...(data.projects || []), ...extractedData.projects];
+      if (extractedData.leadership?.length) {
+        mergedData.leadership = autoMerge(data.leadership || [], extractedData.leadership, 'company', 'role');
       }
-
-      // Merge education
-      if (extractedData.education && extractedData.education.length > 0) {
-        mergedData.education = [...(data.education || []), ...extractedData.education];
+      if (extractedData.projects?.length) {
+        mergedData.projects = autoMerge(data.projects || [], extractedData.projects, 'title', 'title');
+      }
+      if (extractedData.education?.length) {
+        mergedData.education = autoMerge(data.education || [], extractedData.education, 'school', 'degree');
       }
 
       // Merge skills — extracted are plain strings; existing are {category, items} objects
@@ -192,43 +207,8 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
         }
       }
 
-      // Detect duplicates: flag items in merged arrays that share company+role with existing items
-      const normalize = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-
-      const findDuplicates = (existing: any[], added: any[], keyA: string, keyB: string) => {
-        const dupes: string[] = [];
-        added.forEach((newItem) => {
-          const nA = normalize(newItem[keyA]);
-          const nB = normalize(newItem[keyB]);
-          if (!nA && !nB) return;
-          existing.forEach((ex) => {
-            const eA = normalize(ex[keyA]);
-            const eB = normalize(ex[keyB]);
-            if ((nA && eA && eA.includes(nA)) || (nB && eB && eB.includes(nB))) {
-              dupes.push(`"${newItem[keyA] || newItem[keyB]}"`);
-            }
-          });
-        });
-        return [...new Set(dupes)];
-      };
-
-      const dupWarnings: string[] = [];
-      if (extractedData.experiences?.length) {
-        const d = findDuplicates(data.experiences || [], extractedData.experiences, 'company', 'role');
-        if (d.length) dupWarnings.push(`Possible duplicate experience(s): ${d.join(', ')}`);
-      }
-      if (extractedData.leadership?.length) {
-        const d = findDuplicates(data.leadership || [], extractedData.leadership, 'company', 'role');
-        if (d.length) dupWarnings.push(`Possible duplicate leadership: ${d.join(', ')}`);
-      }
-      if (extractedData.projects?.length) {
-        const d = findDuplicates(data.projects || [], extractedData.projects, 'title', 'title');
-        if (d.length) dupWarnings.push(`Possible duplicate project(s): ${d.join(', ')}`);
-      }
-
       onChange(mergedData);
-      const dupNote = dupWarnings.length ? ` Check for duplicates: ${dupWarnings.join(' | ')}` : '';
-      setCareerGoalsSuccess(`Extracted and merged new info into your profile.${dupNote}`);
+      setCareerGoalsSuccess('Extracted and merged new info into your profile. Duplicate entries were automatically combined.');
       
     } catch (error) {
       console.error('Error parsing career goals:', error);

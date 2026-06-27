@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 const ProfileEditor = dynamic(() => import('@/components/ProfileEditor'), { ssr: false });
+const ProfileChat = dynamic(() => import('@/components/ProfileChat'), { ssr: false });
 
 interface ProfileData {
   personalInfo: {
@@ -244,6 +245,12 @@ function PersonalInfoEditor({ profile, setProfile, onSave }: { profile: ProfileD
       </div>
 
       <ProfileEditor data={editedProfile} onChange={setEditedProfile} />
+      {editedProfile && (
+        <ProfileChat
+          profileData={editedProfile}
+          onUpdate={(updated) => setEditedProfile(updated)}
+        />
+      )}
 
       {error && <div className="error-message" style={{ marginTop: '16px' }}>{error}</div>}
       {success && <div className="success-message">{success}</div>}
