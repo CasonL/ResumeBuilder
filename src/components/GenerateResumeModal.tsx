@@ -41,6 +41,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
     includeAchievements: true,
   });
   const [recommendations, setRecommendations] = useState<JobRecommendations | null>(null);
+  const [fitAssessment, setFitAssessment] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contentWarning, setContentWarning] = useState<string | null>(null);
@@ -116,12 +117,13 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
       const response = await fetch('/api/analyze-job-description', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription }),
+        body: JSON.stringify({ jobDescription, masterData }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setRecommendations(data.recommendations);
+        if (data.fitAssessment) setFitAssessment(data.fitAssessment);
         
         setPreferences({
           targetLength: data.recommendations.targetLength,
@@ -152,6 +154,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
       setStep(1);
       setJobDescription('');
       setRecommendations(null);
+      setFitAssessment(null);
       setPreferences({
         targetLength: '1-page',
         layoutStyle: 'balanced-columns',
@@ -246,6 +249,28 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
 
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {fitAssessment && (() => {
+                const score = Number(fitAssessment.score);
+                const color = score >= 7 ? '#86efac' : score >= 5 ? '#fde68a' : '#fca5a5';
+                const label = score >= 7 ? 'Strong Fit' : score >= 5 ? 'Transferable' : 'Long Shot';
+                return (
+                  <div style={{
+                    padding: '14px 16px',
+                    borderRadius: '10px',
+                    background: score >= 7 ? 'rgba(134,239,172,0.07)' : score >= 5 ? 'rgba(253,230,138,0.07)' : 'rgba(252,165,165,0.07)',
+                    border: `1px solid ${color}33`,
+                    borderLeft: `3px solid ${color}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '22px', fontWeight: 700, color }}>{score}/10</span>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                    </div>
+                    <p style={{ fontSize: '13px', margin: '0 0 8px', lineHeight: 1.5, color: 'var(--muted)' }}>{fitAssessment.honestTake}</p>
+                    <p style={{ fontSize: '12px', margin: '0 0 3px', color: '#86efac' }}><strong>Strongest thread:</strong> {fitAssessment.strongestThread}</p>
+                    <p style={{ fontSize: '12px', margin: 0, color: '#fca5a5' }}><strong>Biggest gap:</strong> {fitAssessment.biggestGap}</p>
+                  </div>
+                );
+              })()}
               <div className="form-group">
                 <label>How long should your resume be?</label>
                 {recommendations && (

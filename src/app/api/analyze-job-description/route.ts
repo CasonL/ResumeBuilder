@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-    const { jobDescription } = await request.json();
+    const { jobDescription, masterData } = await request.json();
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
@@ -149,10 +149,45 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
 
     const recommendations = JSON.parse(recommendationCompletion.choices[0].message.content || '{}');
 
-    return NextResponse.json({
-      jobAttributes,
-      recommendations
-    });
+    // FLOW 3: Quick fit check if masterData provided
+    let fitAssessment = null;
+    if (masterData) {
+      const profile = {
+        experiences: (masterData.experiences || []).map((e: any) => `${e.role} at ${e.company}: ${(e.bullets || []).slice(0, 2).join('; ')}`),
+        leadership: (masterData.leadership || []).map((l: any) => `${l.role} at ${l.company}: ${(l.bullets || []).slice(0, 1).join('; ')}`),
+        skills: (masterData.skills || []).flatMap((s: any) => s.items || []).slice(0, 15),
+      };
+
+      const fitPrompt = `Score how well this candidate fits this job. Be blunt — 1 is a long shot, 10 is a direct match.
+
+JOB DESCRIPTION:
+${jobDescription.slice(0, 1500)}
+
+CANDIDATE PROFILE:
+${JSON.stringify(profile)}
+
+Return JSON:
+{
+  "score": <1-10 integer>,
+  "strongestThread": "<one sentence: the single most relevant thing they have>",
+  "biggestGap": "<one sentence: the most important thing the job demands they don't have>",
+  "honestTake": "<2 sentences max: blunt hiring-manager read>"
+}`;
+
+      try {
+        const fitCompletion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: fitPrompt }],
+          response_format: { type: 'json_object' },
+          temperature: 0.2,
+        });
+        fitAssessment = JSON.parse(fitCompletion.choices[0].message.content || '{}');
+      } catch {
+        // non-fatal
+      }
+    }
+
+    return NextResponse.json({ jobAttributes, recommendations, fitAssessment });
 
   } catch (error) {
     console.error('Job description analysis error:', error);
