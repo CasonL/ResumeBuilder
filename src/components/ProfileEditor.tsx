@@ -134,15 +134,14 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
     };
     const cleaned = {
       ...data,
-      experiences: dedup(data.experiences, 'company', 'role'),
-      leadership: dedup(data.leadership, 'company', 'role'),
-      projects: dedup(data.projects, 'title', 'title'),
-      education: dedup(data.education, 'school', 'degree'),
+      experiences: Array.isArray(data.experiences) ? dedup(data.experiences, 'company', 'role') : data.experiences,
+      leadership: Array.isArray(data.leadership) ? dedup(data.leadership, 'company', 'role') : data.leadership,
+      projects: Array.isArray(data.projects) ? dedup(data.projects, 'title', 'title') : data.projects,
     };
     const removed =
-      (data.experiences?.length - cleaned.experiences.length) +
-      (data.leadership?.length - cleaned.leadership.length) +
-      (data.projects?.length - cleaned.projects.length);
+      ((data.experiences?.length || 0) - (cleaned.experiences?.length || 0)) +
+      ((data.leadership?.length || 0) - (cleaned.leadership?.length || 0)) +
+      ((data.projects?.length || 0) - (cleaned.projects?.length || 0));
     onChange(cleaned);
     setDedupSuccess(removed > 0 ? `Merged ${removed} duplicate entr${removed === 1 ? 'y' : 'ies'}.` : 'No duplicates found.');
     setTimeout(() => setDedupSuccess(null), 4000);
