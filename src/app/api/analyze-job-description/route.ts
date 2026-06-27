@@ -158,20 +158,29 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
         skills: (masterData.skills || []).flatMap((s: any) => s.items || []).slice(0, 15),
       };
 
-      const fitPrompt = `Score how well this candidate fits this job. Be blunt — 1 is a long shot, 10 is a direct match.
+      const fitPrompt = `You are a senior hiring manager. Score how well this candidate fits this job. Be brutally honest — do not inflate for soft skills or potential.
+
+SCORING RULES (follow exactly):
+1. Identify the 3-5 MUST-HAVE competencies the role explicitly requires (e.g. "contract renewals", "CRM maintenance", "pricing negotiations", "B2B account management").
+2. For each must-have, determine if the candidate has DIRECT experience (they have literally done that thing) vs TRANSFERABLE (adjacent but not the same thing).
+3. DIRECT experience in a must-have = contributes normally to the score.
+   TRANSFERABLE but not direct = contributes half credit at most.
+   Zero evidence = a hard cap: missing even ONE core must-have keeps the score at 6 or below. Missing two or more caps it at 4 or below.
+4. Soft skills (communication, work ethic, leadership) can only add +1 at most. They cannot compensate for missing core competencies.
+5. Do NOT let skill keywords in the candidate's profile fool you. "Customer Relationship Management" as a listed skill is NOT the same as having done B2B account management. "Sales" is NOT the same as renewal management. Read what they actually DID, not what they listed.
 
 JOB DESCRIPTION:
-${jobDescription.slice(0, 1500)}
+${jobDescription.slice(0, 2000)}
 
-CANDIDATE PROFILE:
+CANDIDATE PROFILE (what they actually did):
 ${JSON.stringify(profile)}
 
 Return JSON:
 {
-  "score": <1-10 integer>,
-  "strongestThread": "<one sentence: the single most relevant thing they have>",
-  "biggestGap": "<one sentence: the most important thing the job demands they don't have>",
-  "honestTake": "<2 sentences max: blunt hiring-manager read>"
+  "score": <1-10 integer — apply the hard caps above>,
+  "strongestThread": "<one sentence: the single most relevant thing they have actually done, not a skill they listed>",
+  "biggestGap": "<one sentence: the most important must-have competency the job requires that the candidate has zero direct evidence for>",
+  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's real, what's missing, realistic odds>"
 }`;
 
       try {

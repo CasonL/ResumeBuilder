@@ -39,12 +39,12 @@ USER PREFERENCES:
 - Include Achievements: ${userPrefs.includeAchievements ? 'Yes' : 'No'}
 
 STEP 0 - FIT ASSESSMENT (do this first, before selecting or framing anything)
-- Score the candidate's actual fit for this role on a 1–10 scale. Be brutal and honest.
-- A 10 means the candidate has direct, verifiable experience in the core competencies this role requires.
-- A 5 means they have transferable experience that takes some explaining.
-- A 1–3 means they are a long shot — no direct thread, and honest framing will reveal the gap.
-- Identify the SINGLE STRONGEST THREAD (the one thing the candidate has that best maps to this role) and the SINGLE BIGGEST GAP (the competency the JD demands most that the candidate has zero evidence for).
-- Do not rationalize the gap away. Name it clearly.
+- Identify the 3-5 MUST-HAVE competencies the role explicitly requires. These are the things the job cannot function without.
+- For each must-have, check if the candidate has DIRECT experience (they literally did that thing in a real role) vs TRANSFERABLE (adjacent but not the same).
+- SCORING HARD CAPS: Missing one core must-have → score 6 or below. Missing two or more → score 4 or below. Soft skills can add +1 at most and cannot compensate for missing core competencies.
+- Do NOT be fooled by skill keywords the candidate listed. "CRM" as a listed skill is not the same as having done CRM maintenance. "Sales" is not the same as renewal management. Score against what they actually DID.
+- Identify the SINGLE STRONGEST THREAD (the one real thing they did that is most relevant) and the SINGLE BIGGEST GAP (the must-have with zero direct evidence).
+- Do not rationalize gaps away. Name them clearly.
 - Output this as the "fitAssessment" field in the final JSON.
 
 STEP 1 - IDENTIFY THE ROLE TYPE AND CORE COMPETENCIES
