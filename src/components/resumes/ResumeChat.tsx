@@ -22,6 +22,7 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [pendingChange, setPendingChange] = useState<any>(null);
   const [pendingMasterChange, setPendingMasterChange] = useState<any>(null);
   const [messageLimit, setMessageLimit] = useState(BASE_LIMIT);
@@ -35,6 +36,26 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  // Load persisted chat history on mount
+  useEffect(() => {
+    fetch(`/api/resumes/${resumeId}/chat-history`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.messages?.length) setMessages(data.messages);
+        if (data.messageLimit) setMessageLimit(data.messageLimit);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingHistory(false));
+  }, [resumeId]);
+
+  const persistHistory = (msgs: Message[], limit: number) => {
+    fetch(`/api/resumes/${resumeId}/chat-history`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: msgs, messageLimit: limit }),
+    }).catch(() => {});
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading || atLimit) return;
@@ -61,14 +82,18 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         throw new Error(result.details || result.error || 'Failed to get response');
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: result.reply || 'No response',
-          hasChanges: result.hasChanges,
-        },
-      ]);
+      setMessages((prev) => {
+        const next = [
+          ...prev,
+          {
+            role: 'assistant' as const,
+            content: result.reply || 'No response',
+            hasChanges: result.hasChanges,
+          },
+        ];
+        persistHistory(next, messageLimit);
+        return next;
+      });
 
       if (result.modifiedResumeData) {
         setPendingChange(result.modifiedResumeData);
@@ -203,9 +228,12 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
           maxHeight: '420px',
         }}
       >
-        {messages.length === 0 && (
+        {isLoadingHistory && (
+          <div style={{ color: '#9ca3af', fontSize: '13px' }}>Loading chat history...</div>
+        )}
+        {!isLoadingHistory && messages.length === 0 && (
           <div style={{ color: '#9ca3af', fontSize: '13px', lineHeight: 1.5 }}>
-            Ask me anything about this resume. I can refine wording, reorder sections, and strengthen bullets. You have 5 messages — make them count.
+            Ask me anything about this resume. I can refine wording, reorder sections, and strengthen bullets. You have {messageLimit} messages — make them count.
           </div>
         )}
 
@@ -282,7 +310,11 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
                   const res = await fetch(`/api/resumes/${resumeId}/unlock-chat`, { method: 'POST' });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Failed to unlock');
-                  setMessageLimit((prev) => prev + data.extraMessages);
+                  setMessageLimit((prev) => {
+                    const next = prev + data.extraMessages;
+                    persistHistory(messages, next);
+                    return next;
+                  });
                 } catch (err: any) {
                   setUnlockError(err.message || 'Could not unlock. Check your credits.');
                 } finally {
