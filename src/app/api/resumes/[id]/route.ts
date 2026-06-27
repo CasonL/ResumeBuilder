@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { createClient } from '@/lib/supabase/server';
-import { decryptData, getEncryptionKey } from '@/lib/encryption';
+import { decryptData, encryptData, getEncryptionKey } from '@/lib/encryption';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
@@ -20,7 +21,7 @@ export async function GET(
     const { data: resume, error } = await supabase
       .from('resumes')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -35,10 +36,27 @@ export async function GET(
     const encryptionKey = getEncryptionKey();
     const resumeData = decryptData(resume.encrypted_data, encryptionKey);
 
+    // Fetch the user's master profile data (required by ResumeGenerated)
+    let masterData = null;
+    try {
+      const { data: profileRecord } = await supabase
+        .from('profiles')
+        .select('encrypted_data')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileRecord?.encrypted_data) {
+        masterData = decryptData(profileRecord.encrypted_data, encryptionKey);
+      }
+    } catch (profileError) {
+      console.error('Failed to fetch master profile for resume view:', profileError);
+    }
+
     return NextResponse.json({
       id: resume.id,
       name: resume.name,
       data: resumeData,
+      masterData,
       jobDescription: resume.job_description,
       preferences: resume.preferences,
       createdAt: resume.created_at,
@@ -55,9 +73,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
@@ -70,7 +89,6 @@ export async function PUT(
 
     // Encrypt updated resume data
     const encryptionKey = getEncryptionKey();
-    const { encryptData } = require('@/lib/encryption');
     const encryptedData = encryptData(data, encryptionKey);
 
     const supabase = await createClient();
@@ -80,7 +98,7 @@ export async function PUT(
         encrypted_data: encryptedData,
         name: name || undefined,
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id);
 
     if (error) {
@@ -103,9 +121,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json(
@@ -118,7 +137,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('resumes')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id);
 
     if (error) {

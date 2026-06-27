@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import ProfileEditor from '@/components/ProfileEditor';
+
+const ProfileEditor = dynamic(() => import('@/components/ProfileEditor'), { ssr: false });
 
 interface ProfileData {
   personalInfo: {
@@ -333,54 +335,24 @@ function ResumeUploader({ onUploadComplete }: { onUploadComplete: () => void }) 
     setSuccess('');
 
     try {
-      // Handle PDF files with client-side text extraction
-      if (selectedFile.type === 'application/pdf' || selectedFile.name.endsWith('.pdf')) {
-        const { extractPdfText } = await import('@/lib/pdf/extractPdfText');
-        const extractedText = await extractPdfText(selectedFile);
+      // All file types (PDF, DOCX, TXT) handled server-side
+      const formData = new FormData();
+      formData.append('resume', selectedFile);
 
-        if (!extractedText || extractedText.length < 50) {
-          throw new Error(
-            'This PDF appears to be scanned or image-based with no extractable text. ' +
-            'Please use the "Paste Resume Text" option below or export as DOCX/TXT.'
-          );
-        }
+      const response = await fetch('/api/profile/upload-resume', {
+        method: 'POST',
+        body: formData,
+      });
 
-        // Send extracted text to parse endpoint (same as paste text flow)
-        const response = await fetch('/api/profile/parse-resume', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resumeText: extractedText }),
-        });
+      const data = await response.json();
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Parsing failed');
-        }
-
-        setParsedData(data.profile);
-        setIsReviewing(true);
-        setSelectedFile(null);
-      } else {
-        // Handle DOCX/TXT files with server-side extraction
-        const formData = new FormData();
-        formData.append('resume', selectedFile);
-
-        const response = await fetch('/api/profile/upload-resume', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Upload failed');
-        }
-
-        setParsedData(data.profile);
-        setIsReviewing(true);
-        setSelectedFile(null);
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
       }
+
+      setParsedData(data.profile);
+      setIsReviewing(true);
+      setSelectedFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {

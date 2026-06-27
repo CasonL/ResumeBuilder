@@ -1,5 +1,37 @@
 import { createClient } from '@/lib/supabase/server';
 
+const ADMIN_EMAIL = 'casonlamothe@gmail.com';
+const DEFAULT_CREDITS = 3;
+
+/**
+ * Ensure a row exists in public.users for the given auth user.
+ * Creates one with 3 credits (and admin flag if applicable) if missing.
+ */
+export async function ensureUserExists(userId: string, email: string) {
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (!existing) {
+    await supabase.from('users').insert({
+      id: userId,
+      email,
+      credits: DEFAULT_CREDITS,
+      is_admin: email === ADMIN_EMAIL,
+    });
+  } else if (email === ADMIN_EMAIL) {
+    // Always keep admin flag set for the owner account
+    await supabase
+      .from('users')
+      .update({ is_admin: true })
+      .eq('id', userId)
+      .eq('is_admin', false);
+  }
+}
+
 /**
  * Get the current authenticated user
  */
@@ -15,13 +47,17 @@ export async function getCurrentUser() {
 }
 
 /**
- * Get the current user's full profile including credits and admin status
+ * Get the current user's full profile including credits and admin status.
+ * Also ensures a users row exists (creates one with 3 credits if missing).
  */
 export async function getCurrentUserProfile() {
   const user = await getCurrentUser();
   if (!user) {
     return null;
   }
+
+  // Ensure the users row exists with correct defaults
+  await ensureUserExists(user.id, user.email || '');
 
   const supabase = await createClient();
   const { data: profile, error } = await supabase

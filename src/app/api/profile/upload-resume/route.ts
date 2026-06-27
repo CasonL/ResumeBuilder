@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import OpenAI from 'openai';
 import mammoth from 'mammoth';
+import { extractText, getDocumentProxy, renderPageAsImage } from 'unpdf';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,14 +13,78 @@ export async function GET() {
   return NextResponse.json({ status: 'Upload endpoint is accessible' });
 }
 
+// Fallback for PDFs with no text layer (image-based/scanned, or text rendered
+// as vector outlines): rasterize each page to an image, then OCR via GPT-4o vision.
+async function extractPdfTextViaOpenAI(buffer: Buffer): Promise<string> {
+  try {
+    // Get page count from a throwaway proxy (no rendering, no canvas needed)
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const maxPages = Math.min(pdf.numPages, 5); // cap cost
+
+    const imageParts = [];
+    for (let i = 1; i <= maxPages; i++) {
+      // Pass a FRESH data copy (not the proxy) so unpdf applies the canvas
+      // factory when creating the document; pdfjs detaches the buffer each call.
+      const dataUrl = (await renderPageAsImage(new Uint8Array(buffer), i, {
+        canvasImport: () => import('@napi-rs/canvas'),
+        scale: 2,
+        toDataURL: true,
+      })) as string;
+      imageParts.push({ type: 'image_url' as const, image_url: { url: dataUrl } });
+    }
+    console.log('[Upload Resume] Rendered', imageParts.length, 'page(s) for OCR');
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            ...imageParts,
+            {
+              type: 'text',
+              text: 'Transcribe ALL text from these resume page image(s) exactly as written. ' +
+                'Preserve every name, date, number, bullet point, and section heading. ' +
+                'Return only the raw transcribed text, no commentary.',
+            },
+          ],
+        },
+      ],
+      temperature: 0,
+    });
+    const out = response.choices[0]?.message?.content?.trim() || '';
+    console.log('[Upload Resume] GPT-4o OCR transcription length:', out.length);
+    return out;
+  } catch (err) {
+    console.error('[Upload Resume] GPT-4o OCR failed:', err);
+    throw new Error(
+      'PDF reading failed: ' + (err instanceof Error ? err.message : 'unknown error')
+    );
+  }
+}
+
 async function extractTextFromFile(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   
-  // PDF files are handled client-side, so they shouldn't reach this endpoint
+  // Handle PDF files server-side using unpdf (wraps pdfjs-dist v5, no browser worker needed)
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    throw new Error(
-      'PDF files should be processed client-side. This is a server configuration error.'
-    );
+    const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
+    let extracted = Array.isArray(text) ? text.join('\n') : (text || '');
+    console.log('[Upload Resume] unpdf extracted length:', extracted.trim().length);
+
+    // No text layer (image-based/outlined PDF) -> fall back to GPT-4o vision
+    if (extracted.trim().length < 50) {
+      console.log('[Upload Resume] No text layer found, falling back to GPT-4o OCR');
+      extracted = await extractPdfTextViaOpenAI(buffer);
+    }
+
+    if (extracted.trim().length < 50) {
+      throw new Error(
+        'Could not extract any text from this PDF. ' +
+        'Please use the "Paste Resume Text" option below, or export as DOCX/TXT.'
+      );
+    }
+    return extracted;
   }
   
   // Handle DOCX files
@@ -134,7 +199,8 @@ Return VALID JSON with this EXACT structure:
     "location": "city, state/province",
     "email": "email address",
     "phone": "phone number",
-    "linkedin": "linkedin url or username"
+    "linkedin": "linkedin url or username",
+    "summary": "Copy the professional summary/objective verbatim if one exists on the resume, otherwise empty string."
   },
   "education": {
     "degree": "degree name",
@@ -231,7 +297,6 @@ CRITICAL RULES:
 - Keep ALL data from pass 1, just fix placement/accuracy
 - Do NOT add new information not in the resume
 - Do NOT remove information that exists in the resume
-
 Return the CORRECTED JSON in the same structure. Only fix errors - keep everything else identical.`;
 
     const secondPass = await openai.chat.completions.create({
@@ -256,6 +321,69 @@ Return the CORRECTED JSON in the same structure. Only fix errors - keep everythi
     }
 
     const validatedProfile = JSON.parse(secondPassResult);
+
+    // Pass 3: craft a captivating professional summary + factual background brief
+    const summaryPassResult = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a world-class resume writer. You write positioning statements — theses, not summaries — that tell a hiring manager what to believe about every line below them. Facts only, zero filler. Return valid JSON only.'
+        },
+        {
+          role: 'user',
+          content: `Write a professional thesis and a background brief from this validated profile.
+
+VALIDATED PROFILE:
+${JSON.stringify(validatedProfile, null, 2)}
+
+--- PROFESSIONAL THESIS ---
+Target: 20-35 words. ONE or TWO sentences maximum. Not a summary -- a positioning claim.
+
+A thesis answers: "What is the single most important thing to know about this candidate?"
+It is NOT a list of accomplishments. It is the lens through which all accomplishments should be read.
+
+VOICE: No name. No I/he/she/they. Subject-less declarative sentences only.
+
+EXAMPLES (study the difference):
+GOOD THESIS: "Founder who ships -- built PitchIQ from zero to paying customers by treating every customer conversation as a product spec."
+GOOD THESIS: "Operator who has sat in the seat: sold door-to-door, managed a $500K painting territory, and then built AI tools to make salespeople better at it."
+BAD (this is a summary, not a thesis): "Built and launched an AI-driven sales training platform, PitchIQ, transforming over 60 customer interviews into a comprehensive product roadmap. Achieved $42K+ in sales at College Pro through targeted marketing strategies."
+Why bad: that is a two-bullet recap of the resume, not a claim about who this person is.
+
+FORBIDDEN WORDS (rewrite if any appear): leverages, passionate, motivated, results-driven, hardworking, dynamic, innovative, revolutionize, substantial, cutting-edge, high-impact, strategic vision, proven track record, seeking, synergy, comprehensive, transforming, spearheaded
+
+USE ONLY FACTS from the profile. Do not invent metrics.
+
+--- BACKGROUND BRIEF (3-5 sentences) ---
+Third-person factual narrative for internal AI context -- not shown to users.
+Cover: roles held, companies, what they built or led, technical/domain strengths, real achievements.
+NO invented aspirations or personality traits.
+
+Return JSON:
+{
+  "professionalSummary": "...",
+  "backgroundBrief": "..."
+}`,
+        }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 400,
+    });
+
+    const summaryData = JSON.parse(summaryPassResult.choices[0].message.content || '{}');
+
+    // Always inject the crafted summary (it's better than generic resume filler)
+    if (summaryData.professionalSummary) {
+      validatedProfile.personalInfo = {
+        ...validatedProfile.personalInfo,
+        summary: summaryData.professionalSummary,
+      };
+    }
+    if (summaryData.backgroundBrief) {
+      validatedProfile.personalContext = summaryData.backgroundBrief;
+    }
 
     return NextResponse.json({
       success: true,

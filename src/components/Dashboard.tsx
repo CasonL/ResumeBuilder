@@ -1,24 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ResumeCard from './ResumeCard';
 import AddResumeCard from './AddResumeCard';
-import GenerateResumeModal from './GenerateResumeModal';
 import LogoutButton from './LogoutButton';
-import { createClient } from '@/lib/supabase/client';
+
+const GenerateResumeModal = dynamic(() => import('./GenerateResumeModal'), { ssr: false });
+const BuyCreditsModal = dynamic(() => import('./BuyCreditsModal'), { ssr: false });
 
 export default function Dashboard() {
   const [resumes, setResumes] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBuyCreditsOpen, setIsBuyCreditsOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [credits, setCredits] = useState<number>(0);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [masterData, setMasterData] = useState<any>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
 
   // Validate profile data for minimum requirements
   const getProfileValidation = () => {
@@ -61,21 +63,12 @@ export default function Dashboard() {
 
   const fetchUserData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserEmail(user.email || '');
-        
-        // Fetch user credits and admin status
-        const { data: userData } = await supabase
-          .from('users')
-          .select('credits, is_admin')
-          .eq('id', user.id)
-          .single();
-        
-        if (userData) {
-          setCredits(userData.credits);
-          setIsAdmin(userData.is_admin);
-        }
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUserEmail(data.email || '');
+        setCredits(data.credits ?? 0);
+        setIsAdmin(data.isAdmin ?? false);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -234,26 +227,39 @@ export default function Dashboard() {
             {isAdmin ? (
               <span style={{ 
                 padding: '4px 8px', 
-                background: 'rgba(234, 179, 8, 0.2)', 
-                border: '1px solid rgba(234, 179, 8, 0.4)',
+                background: 'rgba(139, 94, 60, 0.12)', 
+                border: '1px solid rgba(139, 94, 60, 0.3)',
                 borderRadius: '6px',
                 fontSize: '12px',
                 fontWeight: 600,
-                color: '#eab308'
+                color: '#8b5e3c'
               }}>
                 ⚡ ADMIN
               </span>
             ) : (
-              <span style={{ 
-                padding: '4px 8px', 
-                background: 'var(--card)', 
-                border: '1px solid var(--line)',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 600
-              }}>
-                💳 {credits} {credits === 1 ? 'credit' : 'credits'}
-              </span>
+              <button
+                onClick={() => setIsBuyCreditsOpen(true)}
+                style={{
+                  padding: '4px 8px',
+                  background: 'var(--card)',
+                  border: '1px solid var(--line)',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--line)';
+                }}
+              >
+                💳 {credits} {credits === 1 ? 'credit' : 'credits'} <span style={{ color: 'var(--accent)' }}>+</span>
+              </button>
             )}
             <Link href="/profile" className="nav-link">Profile</Link>
             <LogoutButton className="nav-link logout-btn" />
@@ -271,9 +277,13 @@ export default function Dashboard() {
         ))}
         <AddResumeCard 
           onClick={() => setIsModalOpen(true)} 
-          disabled={!profileValidation.isValid}
+          disabled={!profileValidation.isValid || (credits === 0 && !isAdmin)}
           onDisabledClick={() => {
-            setNotification(profileValidation.message);
+            if (credits === 0 && !isAdmin) {
+              setNotification('No credits remaining. Contact the admin to add credits.');
+            } else {
+              setNotification(profileValidation.message);
+            }
             setTimeout(() => setNotification(null), 4000);
           }}
         />
@@ -284,6 +294,11 @@ export default function Dashboard() {
         onClose={() => setIsModalOpen(false)}
         onGenerate={handleGenerate}
         masterData={masterData}
+      />
+
+      <BuyCreditsModal
+        isOpen={isBuyCreditsOpen}
+        onClose={() => setIsBuyCreditsOpen(false)}
       />
     </div>
   );

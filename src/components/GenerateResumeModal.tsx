@@ -260,11 +260,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     className={preferences.targetLength === '1-page' ? 'button-primary' : 'button-secondary'}
                     style={{ 
                       flex: 1,
-                      borderColor: recommendations?.targetLength === '1-page' ? '#10b981' : undefined
+                      borderColor: recommendations?.targetLength === '1-page' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.targetLength === '1-page' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', display: 'block' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', display: 'block' }}>✓</span>
                     )}
                     1 Page
                   </button>
@@ -274,11 +274,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     className={preferences.targetLength === '2-page' ? 'button-primary' : 'button-secondary'}
                     style={{ 
                       flex: 1,
-                      borderColor: recommendations?.targetLength === '2-page' ? '#10b981' : undefined
+                      borderColor: recommendations?.targetLength === '2-page' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.targetLength === '2-page' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', display: 'block' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', display: 'block' }}>✓</span>
                     )}
                     2 Pages
                   </button>
@@ -286,12 +286,12 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                 {contentWarning && (
                   <p style={{ 
                     fontSize: '13px', 
-                    color: '#f59e0b', 
+                    color: '#c49a45', 
                     marginTop: '8px',
                     padding: '8px',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    backgroundColor: 'rgba(196, 154, 69, 0.1)',
                     borderRadius: '4px',
-                    border: '1px solid rgba(245, 158, 11, 0.3)'
+                    border: '1px solid rgba(196, 154, 69, 0.3)'
                   }}>
                     {contentWarning}
                   </p>
@@ -311,12 +311,12 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     onClick={() => setPreferences({ ...preferences, layoutStyle: 'balanced-columns' })}
                     className={preferences.layoutStyle === 'balanced-columns' ? 'button-primary' : 'button-secondary'}
                     style={{ 
-                      borderColor: recommendations?.layoutStyle === 'balanced-columns' ? '#10b981' : undefined,
+                      borderColor: recommendations?.layoutStyle === 'balanced-columns' ? '#7c8c62' : undefined,
                       position: 'relative'
                     }}
                   >
                     {recommendations?.layoutStyle === 'balanced-columns' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', marginRight: '8px' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', marginRight: '8px' }}>✓</span>
                     )}
                     Balanced 2-Column (main content + sidebar)
                   </button>
@@ -325,11 +325,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     onClick={() => setPreferences({ ...preferences, layoutStyle: 'content-heavy' })}
                     className={preferences.layoutStyle === 'content-heavy' ? 'button-primary' : 'button-secondary'}
                     style={{ 
-                      borderColor: recommendations?.layoutStyle === 'content-heavy' ? '#10b981' : undefined
+                      borderColor: recommendations?.layoutStyle === 'content-heavy' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.layoutStyle === 'content-heavy' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', marginRight: '8px' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', marginRight: '8px' }}>✓</span>
                     )}
                     Content-Heavy (minimize sidebar)
                   </button>
@@ -338,11 +338,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     onClick={() => setPreferences({ ...preferences, layoutStyle: 'sidebar-focus' })}
                     className={preferences.layoutStyle === 'sidebar-focus' ? 'button-primary' : 'button-secondary'}
                     style={{ 
-                      borderColor: recommendations?.layoutStyle === 'sidebar-focus' ? '#10b981' : undefined
+                      borderColor: recommendations?.layoutStyle === 'sidebar-focus' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.layoutStyle === 'sidebar-focus' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', marginRight: '8px' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', marginRight: '8px' }}>✓</span>
                     )}
                     Sidebar-Focus (skills & certs prominent)
                   </button>
@@ -363,11 +363,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     className={preferences.tone === 'professional' ? 'button-primary' : 'button-secondary'}
                     style={{ 
                       flex: 1,
-                      borderColor: recommendations?.tone === 'professional' ? '#10b981' : undefined
+                      borderColor: recommendations?.tone === 'professional' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.tone === 'professional' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', display: 'block' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', display: 'block' }}>✓</span>
                     )}
                     Professional
                   </button>
@@ -377,11 +377,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     className={preferences.tone === 'creative' ? 'button-primary' : 'button-secondary'}
                     style={{ 
                       flex: 1,
-                      borderColor: recommendations?.tone === 'creative' ? '#10b981' : undefined
+                      borderColor: recommendations?.tone === 'creative' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.tone === 'creative' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', display: 'block' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', display: 'block' }}>✓</span>
                     )}
                     Creative
                   </button>
@@ -391,11 +391,11 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     className={preferences.tone === 'technical' ? 'button-primary' : 'button-secondary'}
                     style={{ 
                       flex: 1,
-                      borderColor: recommendations?.tone === 'technical' ? '#10b981' : undefined
+                      borderColor: recommendations?.tone === 'technical' ? '#7c8c62' : undefined
                     }}
                   >
                     {recommendations?.tone === 'technical' && (
-                      <span style={{ fontSize: '11px', color: '#10b981', display: 'block' }}>✓</span>
+                      <span style={{ fontSize: '11px', color: '#7c8c62', display: 'block' }}>✓</span>
                     )}
                     Technical
                   </button>
@@ -425,7 +425,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                         onClick={() => togglePrioritySection(section)}
                         className={isSelected ? 'button-primary' : 'button-secondary'}
                         style={{
-                          borderColor: isRecommended ? '#10b981' : undefined,
+                          borderColor: isRecommended ? '#7c8c62' : undefined,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between'
@@ -435,7 +435,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                           {isSelected ? '✓ ' : ''}{section}
                         </span>
                         {isRecommended && (
-                          <span style={{ fontSize: '11px', color: '#10b981' }}>Recommended</span>
+                          <span style={{ fontSize: '11px', color: '#7c8c62' }}>Recommended</span>
                         )}
                       </button>
                     );

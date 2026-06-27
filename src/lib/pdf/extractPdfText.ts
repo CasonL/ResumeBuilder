@@ -1,13 +1,9 @@
 import * as pdfjsLib from "pdfjs-dist";
 
 export async function extractPdfText(file: File): Promise<string> {
-  // Worker setup for Next (browser)
-  // This is the key: pdf.js needs a worker in browser builds.
-  // Next can handle this URL pattern.
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url
-  ).toString();
+  // Serve the worker from public/ so Next.js doesn't bundle it.
+  // The file is copied to public/pdf.worker.min.mjs at build/setup time.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
   const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });

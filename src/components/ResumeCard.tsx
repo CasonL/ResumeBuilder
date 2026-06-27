@@ -23,7 +23,7 @@ export default function ResumeCard({ resume, onDelete }: ResumeCardProps) {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/resumes/${resume.id}/delete`, {
+      const response = await fetch(`/api/resumes/${resume.id}`, {
         method: 'DELETE',
       });
 

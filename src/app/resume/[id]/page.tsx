@@ -1,10 +1,15 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import ResumeInnovates from '@/components/resumes/ResumeInnovates';
-import ResumeTD from '@/components/resumes/ResumeTD';
-import ResumeGenerated from '@/components/resumes/ResumeGenerated';
+import { mergeCustomizationsIntoMaster } from '@/lib/resume-editor-helpers';
+
+const ResumeInnovates = dynamic(() => import('@/components/resumes/ResumeInnovates'), { ssr: false });
+const ResumeTD = dynamic(() => import('@/components/resumes/ResumeTD'), { ssr: false });
+const ResumeGenerated = dynamic(() => import('@/components/resumes/ResumeGenerated'), { ssr: false });
+const ResumeEditor = dynamic(() => import('@/components/resumes/ResumeEditor'), { ssr: false });
+const ResumeChat = dynamic(() => import('@/components/resumes/ResumeChat'), { ssr: false });
 
 type LayoutMode = 'compressed' | 'normal' | 'spacious';
 
@@ -20,6 +25,7 @@ export default function ResumePage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<any>(null);
+  const [editedMasterData, setEditedMasterData] = useState<any>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
 
   const getPrintTitle = () => {
@@ -36,7 +42,7 @@ export default function ResumePage({ params }: PageProps) {
       if (id !== 'innovates' && id !== 'td-bank') {
         console.log('Loading generated resume:', id);
         try {
-          const response = await fetch(`/api/resume/${id}`);
+          const response = await fetch(`/api/resumes/${id}`);
           console.log('Response status:', response.status);
           if (response.ok) {
             const data = await response.json();
@@ -113,19 +119,60 @@ export default function ResumePage({ params }: PageProps) {
     if (!editedData || !generatedResumeData) return;
     
     try {
-      const response = await fetch(`/api/resume/${id}`, {
+      // Save the resume data
+      const resumeResponse = await fetch(`/api/resumes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: editedData, masterData: generatedResumeData.masterData })
+        body: JSON.stringify({ data: editedData })
       });
       
-      if (response.ok) {
-        setGeneratedResumeData({ ...generatedResumeData, data: editedData });
-        setIsEditing(false);
+      if (!resumeResponse.ok) {
+        throw new Error('Failed to save resume');
       }
+
+      // If master profile was edited, sync it back
+      if (editedMasterData) {
+        const profileResponse = await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editedMasterData)
+        });
+
+        if (!profileResponse.ok) {
+          throw new Error('Failed to save master profile');
+        }
+      }
+      
+      setGeneratedResumeData({
+        ...generatedResumeData,
+        data: editedData,
+        masterData: editedMasterData || generatedResumeData.masterData
+      });
+      setIsEditing(false);
+      setEditedMasterData(null);
     } catch (error) {
       console.error('Error saving resume:', error);
+      alert('Failed to save changes. Please try again.');
     }
+  };
+
+  const handleApplyChanges = (modifiedData: any, modifiedMasterData?: any) => {
+    const baseData = modifiedData || generatedResumeData?.data;
+    const baseMaster = modifiedMasterData || generatedResumeData?.masterData;
+    const mergedMaster = mergeCustomizationsIntoMaster(baseData, baseMaster);
+    const cleanedData = {
+      ...baseData,
+      customizations: {
+        ...baseData.customizations,
+        bulletPointAdjustments: {},
+        roleAdjustments: {}
+      }
+    };
+    setEditedData(cleanedData);
+    setEditedMasterData(mergedMaster);
+    setIsEditing(true);
+    // Scroll to top so the user sees the updated resume
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrint = () => {
@@ -144,7 +191,7 @@ export default function ResumePage({ params }: PageProps) {
   };
 
   return (
-    <div className="resume-viewer">
+    <div className="resume-viewer" data-editing={isEditing}>
       <header className="viewer-header">
         <Link href="/" className="back-link">
           ← Back to Dashboard
@@ -156,7 +203,17 @@ export default function ResumePage({ params }: PageProps) {
                 <>
                   <button className="edit-btn" onClick={() => {
                     setIsEditing(true);
-                    setEditedData(generatedResumeData.data);
+                    const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
+                    const cleanedData = {
+                      ...generatedResumeData.data,
+                      customizations: {
+                        ...generatedResumeData.data.customizations,
+                        bulletPointAdjustments: {},
+                        roleAdjustments: {}
+                      }
+                    };
+                    setEditedData(cleanedData);
+                    setEditedMasterData(mergedMaster);
                   }}>
                     ✏️ Edit Resume
                   </button>
@@ -170,13 +227,24 @@ export default function ResumePage({ params }: PageProps) {
                     💾 Save Changes
                   </button>
                   <button className="undo-btn" onClick={() => {
-                    setEditedData(generatedResumeData.data);
+                    const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
+                    const cleanedData = {
+                      ...generatedResumeData.data,
+                      customizations: {
+                        ...generatedResumeData.data.customizations,
+                        bulletPointAdjustments: {},
+                        roleAdjustments: {}
+                      }
+                    };
+                    setEditedData(cleanedData);
+                    setEditedMasterData(mergedMaster);
                   }}>
                     ↩️ Undo All
                   </button>
                   <button className="cancel-btn" onClick={() => {
                     setIsEditing(false);
                     setEditedData(null);
+                    setEditedMasterData(null);
                   }}>
                     Cancel
                   </button>
@@ -211,7 +279,7 @@ export default function ResumePage({ params }: PageProps) {
         </button>
       </div>
 
-      <div className="resume-layout">
+      <div className={`resume-layout ${isEditing ? 'editing' : ''}`}>
         <div className="page">
           <div className="resume-mode-wrap" data-layout={layoutMode}>
             <div className="print-only-metadata" style={{ display: 'none' }} data-resume-title={getPrintTitle()}>
@@ -220,23 +288,51 @@ export default function ResumePage({ params }: PageProps) {
             {id === 'innovates' && <ResumeInnovates isActive={true} />}
             {id === 'td-bank' && <ResumeTD isActive={true} />}
             {generatedResumeData && (
-              <ResumeGenerated 
-                isActive={true} 
+              <ResumeGenerated
+                isActive={true}
                 data={isEditing ? editedData : generatedResumeData.data}
-                masterData={generatedResumeData.masterData}
-                isEditing={isEditing}
-                onUpdate={setEditedData}
+                masterData={isEditing ? editedMasterData : generatedResumeData.masterData}
+                isEditing={false}
+                onUpdate={undefined}
               />
             )}
           </div>
         </div>
+        {isEditing && editedData && editedMasterData && (
+          <ResumeEditor
+            data={editedData}
+            masterData={editedMasterData}
+            onChange={(newData, newMasterData) => {
+              setEditedData(newData);
+              setEditedMasterData(newMasterData);
+            }}
+          />
+        )}
       </div>
 
+      {generatedResumeData && id !== 'innovates' && id !== 'td-bank' && (
+        <ResumeChat resumeId={id} onApplyChanges={handleApplyChanges} />
+      )}
+
       <style jsx>{`
+        .resume-viewer {
+          max-width: none;
+          width: 100%;
+          padding: 24px;
+        }
+
         .resume-layout {
-          max-width: 900px;
+          max-width: 100%;
           margin: 0 auto;
           padding: 24px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .resume-layout .page {
+          width: 8.5in;
+          min-width: 8.5in;
+          max-width: 8.5in;
         }
 
         .layout-switcher {
@@ -248,9 +344,13 @@ export default function ResumePage({ params }: PageProps) {
           gap: 8px;
           padding: 8px;
           border-radius: 12px;
-          background: color-mix(in srgb, var(--card) 80%, black 20%);
+          background: color-mix(in srgb, var(--card) 85%, var(--bg) 15%);
           border: 1px solid var(--line);
           backdrop-filter: blur(6px);
+        }
+
+        .resume-viewer[data-editing="true"] .layout-switcher {
+          display: none;
         }
 
         .layout-switcher button {
@@ -261,12 +361,23 @@ export default function ResumePage({ params }: PageProps) {
         }
 
         .layout-switcher button.active {
-          background: color-mix(in srgb, var(--accent) 18%, #171b24);
+          background: color-mix(in srgb, var(--accent) 18%, var(--card2));
           border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
         }
 
-        .page {
-          width: 100%;
+        .resume-layout.editing {
+          display: flex;
+          justify-content: flex-start;
+          align-items: flex-start;
+          gap: 24px;
+          padding: 24px 24px 24px 24px;
+        }
+
+        .resume-layout.editing .page {
+          flex: 0 0 auto;
+          width: 8.5in;
+          min-width: 8.5in;
+          max-width: 8.5in;
         }
 
         .viewer-actions {
@@ -293,21 +404,39 @@ export default function ResumePage({ params }: PageProps) {
         }
 
         .undo-btn:hover {
-          background: #f59e0b;
-          border-color: #f59e0b;
+          background: #c49a45;
+          border-color: #c49a45;
           color: white;
         }
 
         .cancel-btn:hover {
-          background: #ef4444;
-          border-color: #ef4444;
+          background: #a8645b;
+          border-color: #a8645b;
           color: white;
         }
 
         @media print {
-          .resume-layout {
-            padding: 0;
-            margin: 0;
+          .resume-viewer {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          .resume-layout,
+          .resume-layout.editing {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          .resume-layout .page,
+          .resume-layout.editing .page {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
           }
           
           .viewer-header {
@@ -315,6 +444,19 @@ export default function ResumePage({ params }: PageProps) {
           }
 
           .layout-switcher {
+            display: none !important;
+          }
+
+          :global(.resume-chat-button),
+          :global(.resume-chat-panel) {
+            display: none !important;
+          }
+
+          :global(.section-visibility-panel) {
+            display: none !important;
+          }
+
+          :global(.resume-editor) {
             display: none !important;
           }
         }

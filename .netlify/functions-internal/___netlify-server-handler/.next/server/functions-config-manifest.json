@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/fit-resume": {
+      "maxDuration": 60
+    },
+    "/api/profile/parse-career-goals": {}
+  }
+}

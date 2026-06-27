@@ -84,6 +84,25 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
     });
   };
 
+  const hiddenSections = data.customizations?.hiddenSections || [];
+  const isSectionHidden = (sectionName: string) => hiddenSections.includes(sectionName);
+
+  const handleToggleSection = (sectionName: string) => {
+    if (!onUpdate || !isEditing) return;
+
+    const newHidden = isSectionHidden(sectionName)
+      ? hiddenSections.filter((s: string) => s !== sectionName)
+      : [...hiddenSections, sectionName];
+
+    onUpdate({
+      ...data,
+      customizations: {
+        ...data.customizations,
+        hiddenSections: newHidden
+      }
+    });
+  };
+
   const handleFieldChange = (field: string, value: any) => {
     if (!onUpdate || !isEditing) return;
     
@@ -281,15 +300,58 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
 
       <div className="resume-body">
         <main className="resume-main">
-          {((data.customizations.summary !== null && data.customizations.summary !== undefined) ? data.customizations.summary : masterData.personalInfo?.summary) && (
+          {isEditing && (
+            <div className="section-visibility-panel" style={{ marginBottom: '16px', padding: '12px', background: 'var(--card)', borderRadius: '8px', border: '1px solid var(--line)' }}>
+              <h3 style={{ fontSize: '14px', margin: '0 0 10px 0' }}>Section Visibility</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {['summary', 'education', 'experience', 'leadership', 'projects', 'skills', 'certifications'].map((sectionName) => {
+                  const available = sectionName === 'summary'
+                    ? ((data.customizations.summary !== null && data.customizations.summary !== undefined) ? data.customizations.summary : masterData.personalInfo?.summary)
+                    : sectionName === 'education'
+                    ? masterData.education
+                    : sectionName === 'experience'
+                    ? data.selectedExperiences?.length > 0
+                    : sectionName === 'leadership'
+                    ? data.selectedLeadership?.length > 0
+                    : sectionName === 'projects'
+                    ? data.selectedProjects?.length > 0
+                    : sectionName === 'skills'
+                    ? data.selectedSkills?.length > 0
+                    : masterData.certifications?.length > 0;
+                  if (!available) return null;
+                  const hidden = isSectionHidden(sectionName);
+                  return (
+                    <button
+                      key={sectionName}
+                      onClick={() => handleToggleSection(sectionName)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--line)',
+                        background: hidden ? '#a8645b' : 'var(--accent)',
+                        color: 'white',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                      title={hidden ? 'Show section' : 'Hide section'}
+                    >
+                      {hidden ? '➕ ' : '✓ '}{sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!isSectionHidden('summary') && ((data.customizations.summary !== null && data.customizations.summary !== undefined) ? data.customizations.summary : masterData.personalInfo?.summary) && (
             <section className="summary-section">
               {isEditing && (
                 <button
-                  onClick={() => handleFieldChange('summary', null)}
+                  onClick={() => handleToggleSection('summary')}
                   className="delete-summary-btn"
-                  title="Delete summary section"
+                  title="Hide summary section"
                 >
-                  ✕ Remove Summary
+                  ✕ Hide Summary
                 </button>
               )}
               {isEditing ? (
@@ -306,42 +368,56 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
             </section>
           )}
 
-          <section>
-            <h2>Education</h2>
-            <p>
-              <b>{masterData.education.degree}</b> • {masterData.education.institution}{' '}
-              <span className="small">({masterData.education.dates})</span>
-            </p>
-            {isEditing ? (
-              <div className="field-edit-wrapper">
-                <label className="edit-label">Focus:</label>
-                <input
-                  type="text"
-                  value={data.customizations.educationFocus || masterData.education.focus || ''}
-                  onChange={(e) => handleFieldChange('educationFocus', e.target.value)}
-                  className="field-input"
-                  placeholder="e.g., Product Strategy & Data-Driven Decision Making"
-                />
+          {!isSectionHidden('education') && (
+            <section>
+              <div className="section-header-row">
+                <h2>Education</h2>
+                {isEditing && (
+                  <button
+                    onClick={() => handleToggleSection('education')}
+                    className="delete-full-section-btn"
+                    title="Hide education section"
+                  >
+                    🗑️ Hide Section
+                  </button>
+                )}
               </div>
-            ) : (
-              masterData.education.focus && <p><b>Focus:</b> {data.customizations.educationFocus || masterData.education.focus}</p>
-            )}
-          </section>
-
-          <section>
-            <div className="section-header-row">
-              <h2>Experience</h2>
-              {isEditing && data.selectedExperiences?.length > 0 && (
-                <button
-                  onClick={() => handleDeleteSection('selectedExperiences')}
-                  className="delete-full-section-btn"
-                  title="Delete entire Experience section"
-                >
-                  🗑️ Delete Section
-                </button>
+              <p>
+                <b>{masterData.education.degree}</b> • {masterData.education.institution}{' '}
+                <span className="small">({masterData.education.dates})</span>
+              </p>
+              {isEditing ? (
+                <div className="field-edit-wrapper">
+                  <label className="edit-label">Focus:</label>
+                  <input
+                    type="text"
+                    value={data.customizations.educationFocus || masterData.education.focus || ''}
+                    onChange={(e) => handleFieldChange('educationFocus', e.target.value)}
+                    className="field-input"
+                    placeholder="e.g., Product Strategy & Data-Driven Decision Making"
+                  />
+                </div>
+              ) : (
+                masterData.education.focus && <p><b>Focus:</b> {data.customizations.educationFocus || masterData.education.focus}</p>
               )}
-            </div>
-            {data.selectedExperiences?.map((expId: string) => {
+            </section>
+          )}
+
+          {!isSectionHidden('experience') && data.selectedExperiences?.length > 0 && (
+            <section>
+              <div className="section-header-row">
+                <h2>Experience</h2>
+                {isEditing && (
+                  <button
+                    onClick={() => handleToggleSection('experience')}
+                    className="delete-full-section-btn"
+                    title="Hide Experience section"
+                  >
+                    🗑️ Hide Section
+                  </button>
+                )}
+              </div>
+              {data.selectedExperiences?.map((expId: string) => {
               const experience = masterData.experiences.find((e: any) => e.id === expId);
               if (!experience) return null;
 
@@ -425,18 +501,19 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
               );
             })}
           </section>
+          )}
 
-          {data.selectedLeadership && data.selectedLeadership.length > 0 && (
+          {!isSectionHidden('leadership') && data.selectedLeadership && data.selectedLeadership.length > 0 && (
             <section>
               <div className="section-header-row">
                 <h2>Leadership</h2>
                 {isEditing && (
                   <button
-                    onClick={() => handleDeleteSection('selectedLeadership')}
+                    onClick={() => handleToggleSection('leadership')}
                     className="delete-full-section-btn"
-                    title="Delete entire Leadership section"
+                    title="Hide Leadership section"
                   >
-                    🗑️ Delete Section
+                    🗑️ Hide Section
                   </button>
                 )}
               </div>
@@ -526,17 +603,17 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
             </section>
           )}
 
-          {data.selectedProjects && data.selectedProjects.length > 0 && (
+          {!isSectionHidden('projects') && data.selectedProjects && data.selectedProjects.length > 0 && (
             <section>
               <div className="section-header-row">
                 <h2>Projects</h2>
                 {isEditing && (
                   <button
-                    onClick={() => handleDeleteSection('selectedProjects')}
+                    onClick={() => handleToggleSection('projects')}
                     className="delete-full-section-btn"
-                    title="Delete entire Projects section"
+                    title="Hide Projects section"
                   >
-                    🗑️ Delete Section
+                    🗑️ Hide Section
                   </button>
                 )}
               </div>
@@ -590,7 +667,7 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
             </section>
           )}
 
-          {data.selectedSkills && data.selectedSkills.length > 0 && (() => {
+          {!isSectionHidden('skills') && data.selectedSkills && data.selectedSkills.length > 0 && (() => {
             // Backward compatibility: convert old flat array to categorized format
             const normalizedSkills = typeof data.selectedSkills[0] === 'string' 
               ? [{ category: 'Skills', items: data.selectedSkills }]
@@ -602,11 +679,11 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
                   <h2>Skills</h2>
                   {isEditing && (
                     <button
-                      onClick={() => handleDeleteSection('selectedSkills')}
+                      onClick={() => handleToggleSection('skills')}
                       className="delete-full-section-btn"
-                      title="Delete entire Skills section"
+                      title="Hide Skills section"
                     >
-                      🗑️ Delete Section
+                      🗑️ Hide Section
                     </button>
                   )}
                 </div>
@@ -681,9 +758,20 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
             );
           })()}
 
-          {masterData.certifications && masterData.certifications.length > 0 && (
+          {!isSectionHidden('certifications') && masterData.certifications && masterData.certifications.length > 0 && (
             <section>
-              <h2>Certifications</h2>
+              <div className="section-header-row">
+                <h2>Certifications</h2>
+                {isEditing && (
+                  <button
+                    onClick={() => handleToggleSection('certifications')}
+                    className="delete-full-section-btn"
+                    title="Hide Certifications section"
+                  >
+                    🗑️ Hide Section
+                  </button>
+                )}
+              </div>
               {isEditing ? (
                 <div className="certs-list-edit">
                   {(data.customizations.certifications || masterData.certifications).map((cert: any, i: number) => (

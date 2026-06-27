@@ -7,7 +7,7 @@ CREATE TABLE public.users (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   is_admin BOOLEAN DEFAULT FALSE,
-  credits INTEGER DEFAULT 0,
+  credits INTEGER DEFAULT 3,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -117,12 +117,13 @@ CREATE POLICY "System can insert transactions"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, full_name, credits)
+  INSERT INTO public.users (id, email, full_name, credits, is_admin)
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'full_name',
-    3 -- Give 3 free credits on signup
+    3, -- Give 3 free credits on signup
+    (NEW.email = 'casonlamothe@gmail.com') -- Admin for owner account
   );
   RETURN NEW;
 END;

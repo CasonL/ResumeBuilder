@@ -128,7 +128,7 @@ export default function AdminPage() {
                 </td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
                   {user.is_admin ? (
-                    <span style={{ color: '#eab308' }}>⚡ Yes</span>
+                    <span style={{ color: '#8b5e3c' }}>⚡ Yes</span>
                   ) : (
                     <span style={{ color: 'var(--muted)' }}>No</span>
                   )}
@@ -143,9 +143,9 @@ export default function AdminPage() {
                       style={{
                         padding: '4px 8px',
                         fontSize: '12px',
-                        background: 'rgba(34, 197, 94, 0.1)',
-                        border: '1px solid rgba(34, 197, 94, 0.3)',
-                        color: '#22c55e',
+                        background: 'rgba(124, 140, 98, 0.1)',
+                        border: '1px solid rgba(124, 140, 98, 0.3)',
+                        color: '#7c8c62',
                         borderRadius: '6px',
                         cursor: 'pointer',
                       }}
@@ -157,9 +157,9 @@ export default function AdminPage() {
                       style={{
                         padding: '4px 8px',
                         fontSize: '12px',
-                        background: user.is_admin ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                        border: user.is_admin ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(234, 179, 8, 0.3)',
-                        color: user.is_admin ? '#ef4444' : '#eab308',
+                        background: user.is_admin ? 'rgba(168, 100, 91, 0.1)' : 'rgba(139, 94, 60, 0.1)',
+                        border: user.is_admin ? '1px solid rgba(168, 100, 91, 0.3)' : '1px solid rgba(139, 94, 60, 0.3)',
+                        color: user.is_admin ? '#a8645b' : '#8b5e3c',
                         borderRadius: '6px',
                         cursor: 'pointer',
                       }}
