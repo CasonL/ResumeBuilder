@@ -59,17 +59,38 @@ RULES:
   const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
 
   let updatedProfile = null;
-  const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
-  if (jsonMatch) {
+  let cleanText = text;
+
+  // Try fenced code block with or without newlines
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenced) {
     try {
-      const parsed = JSON.parse(jsonMatch[1]);
+      const parsed = JSON.parse(fenced[1]);
       updatedProfile = parsed.updatedProfile || null;
+      cleanText = text.replace(/```(?:json)?\s*[\s\S]*?\s*```/, '').trim();
     } catch {
-      // ignore malformed JSON
+      // not valid JSON in fence
     }
   }
 
-  const reply = text.replace(/```json\n[\s\S]*?\n```/g, '').trim();
+  // Fallback: find largest JSON object in text
+  if (!updatedProfile) {
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd > jsonStart) {
+      try {
+        const parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
+        if (parsed.updatedProfile) {
+          updatedProfile = parsed.updatedProfile;
+          cleanText = (text.slice(0, jsonStart) + text.slice(jsonEnd + 1)).trim();
+        }
+      } catch {
+        // not valid JSON
+      }
+    }
+  }
+
+  const reply = cleanText || 'Profile updated.';
 
   return NextResponse.json({ reply, updatedProfile });
 }

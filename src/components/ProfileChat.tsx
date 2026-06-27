@@ -48,6 +48,12 @@ export default function ProfileChat({ profileData, onUpdate }: ProfileChatProps)
 
       if (data.updatedProfile) {
         onUpdate(data.updatedProfile);
+        // Explicitly persist so we don't rely solely on auto-save
+        fetch('/api/profile/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data.updatedProfile),
+        }).catch(() => {});
       }
 
       setMessages((prev) => [
