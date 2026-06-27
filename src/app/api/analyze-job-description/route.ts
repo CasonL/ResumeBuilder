@@ -180,8 +180,16 @@ Return JSON:
   "score": <1-10 integer — apply the hard caps above>,
   "strongestThread": "<one sentence: the single most relevant thing they have actually done, not a skill they listed>",
   "biggestGap": "<one sentence: the most important must-have competency the job requires that the candidate has zero direct evidence for>",
-  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's real, what's missing, realistic odds>"
-}`;
+  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's real, what's missing, realistic odds>",
+  "skillsGap": [
+    {
+      "skill": "<specific skill or experience to develop, e.g. 'Salesforce CRM'>",
+      "effort": "<days | weeks | months | years>",
+      "path": "<one sentence: the most direct way to actually get this — free resources, certs, job types>"
+    }
+  ]
+}
+Only include skillsGap if score < 7. List 2-3 items max, ordered by leverage (most impactful to the score first). Be specific and actionable — not generic advice like "get more experience".`;
 
       try {
         const fitCompletion = await openai.chat.completions.create({

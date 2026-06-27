@@ -198,7 +198,14 @@ Return VALID JSON with this exact structure:
     "score": "number 1–10",
     "strongestThread": "the one real thing the candidate has that maps to this role",
     "biggestGap": "the most important competency the JD demands that the candidate has zero evidence for",
-    "honestTake": "2-3 sentence blunt hiring manager perspective — what works, what's a problem, realistic odds"
+    "honestTake": "2-3 sentence blunt hiring manager perspective — what works, what's a problem, realistic odds",
+    "skillsGap": [
+      {
+        "skill": "specific skill or experience to develop",
+        "effort": "days | weeks | months | years",
+        "path": "one sentence: most direct way to get this — specific resources, certs, or job types"
+      }
+    ]
   },
   "selectedExperiences": ["array of experience IDs from masterData.experiences"],
   "selectedLeadership": ["array of leadership IDs from masterData.leadership"],

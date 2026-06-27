@@ -12,6 +12,7 @@ export default function ResumePreviewPage() {
   const [generatedData, setGeneratedData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
+  const [showGap, setShowGap] = useState(false);
 
   const printTitle = generatedData?.data?.resumeName || 'Resume';
 
@@ -207,9 +208,30 @@ export default function ResumePreviewPage() {
                 <p style={{ fontSize: '12px', color: threadColor, marginBottom: '4px' }}>
                   <strong>✓ Strongest thread:</strong> {data.fitAssessment.strongestThread}
                 </p>
-                <p style={{ fontSize: '12px', color: '#b91c1c' }}>
+                <p style={{ fontSize: '12px', color: '#b91c1c', marginBottom: data.fitAssessment.skillsGap?.length ? '10px' : 0 }}>
                   <strong>✗ Biggest gap:</strong> {data.fitAssessment.biggestGap}
                 </p>
+                {data.fitAssessment.skillsGap?.length > 0 && (
+                  <div>
+                    <button
+                      onClick={() => setShowGap(g => !g)}
+                      style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                    >
+                      {showGap ? '▲ Hide' : '▼ How to close this gap'}
+                    </button>
+                    {showGap && (
+                      <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {data.fitAssessment.skillsGap.map((item: any, i: number) => (
+                          <div key={i} style={{ fontSize: '12px', lineHeight: 1.5 }}>
+                            <span style={{ fontWeight: 700 }}>{item.skill}</span>
+                            <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 600, color: scoreColor, background: `${borderColor}18`, padding: '1px 6px', borderRadius: '999px' }}>{item.effort}</span>
+                            <p style={{ margin: '2px 0 0', color: 'var(--muted, #555)', fontSize: '12px' }}>{item.path}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             );
           })()}

@@ -42,6 +42,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
   });
   const [recommendations, setRecommendations] = useState<JobRecommendations | null>(null);
   const [fitAssessment, setFitAssessment] = useState<any>(null);
+  const [showGap, setShowGap] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contentWarning, setContentWarning] = useState<string | null>(null);
@@ -155,6 +156,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
       setJobDescription('');
       setRecommendations(null);
       setFitAssessment(null);
+      setShowGap(false);
       setPreferences({
         targetLength: '1-page',
         layoutStyle: 'balanced-columns',
@@ -270,7 +272,29 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                     </div>
                     <p style={{ fontSize: '13px', margin: '0 0 10px', lineHeight: 1.6, color: 'var(--fg, #1a1a1a)' }}>{fitAssessment.honestTake}</p>
                     <p style={{ fontSize: '12px', margin: '0 0 4px', color: threadColor }}><strong>✓ Strongest thread:</strong> {fitAssessment.strongestThread}</p>
-                    <p style={{ fontSize: '12px', margin: 0, color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
+                    <p style={{ fontSize: '12px', margin: '0 0 10px', color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
+                    {fitAssessment.skillsGap?.length > 0 && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setShowGap(g => !g)}
+                          style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                        >
+                          {showGap ? '▲ Hide' : '▼ How to close this gap'}
+                        </button>
+                        {showGap && (
+                          <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {fitAssessment.skillsGap.map((item: any, i: number) => (
+                              <div key={i} style={{ fontSize: '12px', lineHeight: 1.5 }}>
+                                <span style={{ fontWeight: 700, color: 'var(--fg, #1a1a1a)' }}>{item.skill}</span>
+                                <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 600, color: scoreColor, background: `${borderColor}18`, padding: '1px 6px', borderRadius: '999px' }}>{item.effort}</span>
+                                <p style={{ margin: '2px 0 0', color: 'var(--muted, #555)' }}>{item.path}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })()}
