@@ -46,19 +46,19 @@ export default function ProfileChat({ profileData, onUpdate }: ProfileChatProps)
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to get response');
 
-      if (data.updatedProfile) {
-        onUpdate(data.updatedProfile);
-        // Explicitly persist so we don't rely solely on auto-save
+      if (data.profilePatch) {
+        const merged = { ...profileData, ...data.profilePatch };
+        onUpdate(merged);
         fetch('/api/profile/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data.updatedProfile),
+          body: JSON.stringify(merged),
         }).catch(() => {});
       }
 
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.reply || 'No response', hasUpdate: !!data.updatedProfile },
+        { role: 'assistant', content: data.reply || 'No response', hasUpdate: !!data.profilePatch },
       ]);
     } catch (err) {
       setMessages((prev) => [

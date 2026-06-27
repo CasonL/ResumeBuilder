@@ -29,17 +29,19 @@ YOUR APPROACH:
 
 WHEN TO UPDATE THE PROFILE:
 When the user shares information worth adding, respond with:
-1. A brief acknowledgment of what you learned.
-2. A JSON block containing the COMPLETE updated profile under the key "updatedProfile".
+1. A brief acknowledgment (1-2 sentences max).
+2. A JSON block containing ONLY the sections that changed, under the key "profilePatch".
 
-Example JSON block format:
+Example — only send what changed:
 \`\`\`json
-{ "updatedProfile": { ...complete profile object... } }
+{ "profilePatch": { "experiences": [ ...only the updated experiences array... ] } }
 \`\`\`
+
+IMPORTANT: Only include the sections that actually changed (e.g. just "experiences" or just "skills"). Do NOT send the full profile — it is too large.
 
 RULES:
 - Never invent facts. Only add what the user explicitly tells you.
-- Keep existing data intact — only add or improve.
+- Preserve all existing items in a section — don't drop entries.
 - If just asking a question, do NOT include the JSON block.
 - Keep responses concise. One question, one update.
 - Prioritize filling gaps in: bullet points with metrics, projects with outcomes, skills implied by experience.`;
@@ -51,46 +53,44 @@ RULES:
 
   const response = await anthropic.messages.create({
     model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: systemPrompt,
     messages: chatMessages,
   });
 
   const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
 
-  let updatedProfile = null;
+  let profilePatch: Record<string, any> | null = null;
   let cleanText = text;
 
-  // Try fenced code block with or without newlines
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (fenced) {
-    try {
-      const parsed = JSON.parse(fenced[1]);
-      updatedProfile = parsed.updatedProfile || null;
-      cleanText = text.replace(/```(?:json)?\s*[\s\S]*?\s*```/, '').trim();
-    } catch {
-      // not valid JSON in fence
+  const extractJSON = (src: string) => {
+    // Try fenced code block
+    const fenced = src.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (fenced) {
+      try { return JSON.parse(fenced[1]); } catch {}
     }
+    // Try raw JSON object
+    const start = src.indexOf('{');
+    const end = src.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      try { return JSON.parse(src.slice(start, end + 1)); } catch {}
+    }
+    return null;
+  };
+
+  const parsed = extractJSON(text);
+  if (parsed?.profilePatch) {
+    profilePatch = parsed.profilePatch;
+    cleanText = text.replace(/```(?:json)?\s*[\s\S]*?\s*```/, '')
+      .replace(/\{[\s\S]*\}/, '').trim();
+  } else if (parsed?.updatedProfile) {
+    // Legacy fallback: full profile returned
+    profilePatch = parsed.updatedProfile;
+    cleanText = text.replace(/```(?:json)?\s*[\s\S]*?\s*```/, '')
+      .replace(/\{[\s\S]*\}/, '').trim();
   }
 
-  // Fallback: find largest JSON object in text
-  if (!updatedProfile) {
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}');
-    if (jsonStart !== -1 && jsonEnd > jsonStart) {
-      try {
-        const parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
-        if (parsed.updatedProfile) {
-          updatedProfile = parsed.updatedProfile;
-          cleanText = (text.slice(0, jsonStart) + text.slice(jsonEnd + 1)).trim();
-        }
-      } catch {
-        // not valid JSON
-      }
-    }
-  }
+  const reply = cleanText || 'Done.';
 
-  const reply = cleanText || 'Profile updated.';
-
-  return NextResponse.json({ reply, updatedProfile });
+  return NextResponse.json({ reply, profilePatch });
 }
