@@ -43,6 +43,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
   const [recommendations, setRecommendations] = useState<JobRecommendations | null>(null);
   const [fitAssessment, setFitAssessment] = useState<any>(null);
   const [showGap, setShowGap] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contentWarning, setContentWarning] = useState<string | null>(null);
@@ -157,6 +158,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
       setRecommendations(null);
       setFitAssessment(null);
       setShowGap(false);
+      setShowDetails(false);
       setPreferences({
         targetLength: '1-page',
         layoutStyle: 'balanced-columns',
@@ -270,30 +272,41 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
                       <span style={{ fontSize: '26px', fontWeight: 800, color: scoreColor }}>{score}/10</span>
                       <span style={{ fontSize: '11px', fontWeight: 700, color: scoreColor, textTransform: 'uppercase', letterSpacing: '0.07em', background: `${borderColor}22`, padding: '2px 8px', borderRadius: '999px' }}>{label}</span>
                     </div>
-                    <p style={{ fontSize: '13px', margin: '0 0 10px', lineHeight: 1.6, color: 'var(--fg, #1a1a1a)' }}>{fitAssessment.honestTake}</p>
                     <p style={{ fontSize: '12px', margin: '0 0 8px', padding: '6px 10px', borderRadius: '6px', background: `${borderColor}14`, color: scoreColor, lineHeight: 1.5 }}>
                       {score >= 7 ? '✦ Apply directly — your resume speaks for itself here.' : score >= 5 ? '✦ Worth applying — but do it smart. Find the hiring manager on LinkedIn and send a 2-line note before submitting. A brief touchpoint turns a borderline resume into a real conversation.' : '✦ High-leverage move: close 1-2 of the gaps below first, or reach out on LinkedIn to learn what they actually prioritize before spending the application effort.'}
                     </p>
-                    <p style={{ fontSize: '12px', margin: '0 0 4px', color: threadColor }}><strong>✓ Strongest thread:</strong> {fitAssessment.strongestThread}</p>
-                    <p style={{ fontSize: '12px', margin: '0 0 10px', color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
-                    {fitAssessment.skillsGap?.length > 0 && (
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => setShowGap(g => !g)}
-                          style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                        >
-                          {showGap ? '▲ Hide' : '▼ How to close this gap'}
-                        </button>
-                        {showGap && (
-                          <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {fitAssessment.skillsGap.map((item: any, i: number) => (
-                              <div key={i} style={{ fontSize: '12px', lineHeight: 1.5 }}>
-                                <span style={{ fontWeight: 700, color: 'var(--fg, #1a1a1a)' }}>{item.skill}</span>
-                                <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 600, color: scoreColor, background: `${borderColor}18`, padding: '1px 6px', borderRadius: '999px' }}>{item.effort}</span>
-                                <p style={{ margin: '2px 0 0', color: 'var(--muted, #555)' }}>{item.path}</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowDetails(d => !d)}
+                      style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                    >
+                      {showDetails ? '▲ Hide details' : '▼ See full assessment'}
+                    </button>
+                    {showDetails && (
+                      <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <p style={{ fontSize: '13px', margin: 0, lineHeight: 1.6, color: 'var(--fg, #1a1a1a)' }}>{fitAssessment.honestTake}</p>
+                        <p style={{ fontSize: '12px', margin: 0, color: threadColor }}><strong>✓ Strongest thread:</strong> {fitAssessment.strongestThread}</p>
+                        <p style={{ fontSize: '12px', margin: 0, color: '#b91c1c' }}><strong>✗ Biggest gap:</strong> {fitAssessment.biggestGap}</p>
+                        {fitAssessment.skillsGap?.length > 0 && (
+                          <div style={{ marginTop: '4px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setShowGap(g => !g)}
+                              style={{ fontSize: '12px', fontWeight: 600, color: scoreColor, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            >
+                              {showGap ? '▲ Hide' : '▼ How to close this gap'}
+                            </button>
+                            {showGap && (
+                              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {fitAssessment.skillsGap.map((item: any, i: number) => (
+                                  <div key={i} style={{ fontSize: '12px', lineHeight: 1.5 }}>
+                                    <span style={{ fontWeight: 700, color: 'var(--fg, #1a1a1a)' }}>{item.skill}</span>
+                                    <span style={{ marginLeft: '6px', fontSize: '11px', fontWeight: 600, color: scoreColor, background: `${borderColor}18`, padding: '1px 6px', borderRadius: '999px' }}>{item.effort}</span>
+                                    <p style={{ margin: '2px 0 0', color: 'var(--muted, #555)' }}>{item.path}</p>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
                           </div>
                         )}
                       </div>
