@@ -34,7 +34,7 @@ interface ProfileData {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'personal' | 'upload'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'upload' | 'website'>('personal');
 
   const refreshProfile = useCallback(() => {
     fetch('/api/profile')
@@ -104,6 +104,12 @@ export default function ProfilePage() {
         >
           Upload Resume
         </button>
+        <button
+          className={`profile-tab ${activeTab === 'website' ? 'active' : ''}`}
+          onClick={() => setActiveTab('website')}
+        >
+          Import Website
+        </button>
       </div>
 
       <div className="profile-content">
@@ -125,6 +131,17 @@ export default function ProfilePage() {
               skills, and other information using AI.
             </p>
             <ResumeUploader onUploadComplete={refreshProfile} />
+          </div>
+        )}
+
+        {activeTab === 'website' && (
+          <div className="profile-section">
+            <h2>Import from Website</h2>
+            <p className="section-subtitle">
+              Enter the URL of your portfolio, personal site, or any page that describes your work.
+              We'll scrape the text and extract projects, experience, and skills.
+            </p>
+            <WebsiteImporter onImportComplete={refreshProfile} />
           </div>
         )}
       </div>
@@ -595,6 +612,103 @@ function ResumeUploader({ onUploadComplete }: { onUploadComplete: () => void }) 
           {isUploading ? 'Parsing with AI (2 passes)...' : 'Parse Resume'}
         </button>
       )}
+    </div>
+  );
+}
+
+function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void }) {
+  const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [parsedData, setParsedData] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleScrape = async () => {
+    if (!url.trim()) { setError('Please enter a URL'); return; }
+    setIsLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/profile/scrape-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Scrape failed');
+      setParsedData(data.profile);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/profile/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsedData),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      setParsedData(null);
+      setUrl('');
+      onImportComplete();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (parsedData) {
+    return (
+      <div className="resume-uploader">
+        <div className="review-header">
+          <h3>Review Extracted Info</h3>
+          <p className="review-subtitle">AI extracted the following from the site. Review and confirm to merge into your profile.</p>
+        </div>
+        <ProfileEditor data={parsedData} onChange={setParsedData} />
+        {error && <div className="error-message" style={{ marginTop: '16px' }}>{error}</div>}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <button onClick={() => setParsedData(null)} className="button-secondary" style={{ flex: 1 }} disabled={isSaving}>Cancel</button>
+          <button onClick={handleConfirm} className="button-primary" style={{ flex: 1 }} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Confirm & Save to Profile'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="resume-uploader">
+      <div className="form-group">
+        <label htmlFor="website-url">Portfolio or Website URL</label>
+        <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '8px' }}>
+          Works best with personal portfolio sites, GitHub profile pages, or any page describing your work.
+          Doesn't work well with JavaScript-only SPAs (React/Next apps with no server-rendered HTML).
+        </p>
+        <input
+          id="website-url"
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleScrape()}
+          placeholder="https://yourportfolio.com"
+          style={{ width: '100%', marginBottom: '12px' }}
+        />
+        <button
+          onClick={handleScrape}
+          className="button-primary"
+          disabled={isLoading || !url.trim()}
+          style={{ width: '100%' }}
+        >
+          {isLoading ? 'Scraping & Extracting...' : 'Import from Website'}
+        </button>
+      </div>
+      {error && <div className="error-message" style={{ marginTop: '12px' }}>{error}</div>}
     </div>
   );
 }
