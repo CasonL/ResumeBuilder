@@ -707,9 +707,10 @@ function WebsiteImporter({ onImportComplete, existingContext, existingUrl }: { o
           </div>
           <textarea
             value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            rows={5}
-            style={{ width: '100%', marginBottom: '12px' }}
+            onChange={(e) => { setSummary(e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+            ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+            rows={1}
+            style={{ width: '100%', marginBottom: '12px', resize: 'none', overflow: 'hidden' }}
           />
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={handleSave} className="button-primary" disabled={isSaving} style={{ flex: 1 }}>
