@@ -897,16 +897,8 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
 
         .editor-section {
           position: relative;
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: var(--radius);
-          padding: 24px;
-          margin-bottom: 24px;
-          transition: all 0.2s ease;
-        }
-
-        .editor-section:hover {
-          border-color: var(--accent);
+          padding: 0;
+          margin-bottom: 32px;
         }
 
         .section-header {
