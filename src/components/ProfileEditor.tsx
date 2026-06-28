@@ -766,8 +766,9 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
               <div className="form-group" style={{ marginTop: '8px' }}>
                 <label>Skills (comma-separated)</label>
                 <textarea
-                  value={skillCat.items?.join(', ') || ''}
-                  onChange={(e) => {
+                  key={`skill-${i}-${skillCat.items?.join('|')}`}
+                  defaultValue={skillCat.items?.join(', ') || ''}
+                  onBlur={(e) => {
                     const items = e.target.value.split(',').map(s => s.trim()).filter(s => s);
                     updateArrayItem('skills', i, 'items', items);
                   }}
