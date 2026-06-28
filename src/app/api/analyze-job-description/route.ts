@@ -160,21 +160,34 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
         ...(masterData.websiteContext ? { portfolioContext: masterData.websiteContext } : {}),
       };
 
-      const fitPrompt = `You are a senior hiring manager. Score how well this candidate fits this job. Be brutally honest — do not inflate for soft skills or potential.
+      const fitPrompt = `You are an experienced hiring manager evaluating a candidate for a specific role. Your job is to give an accurate, honest fit score — not flattering, not dismissive. This must work fairly for any role type: sales, engineering, operations, healthcare, marketing, product, finance, creative, or anything else.
 
-SCORING RULES (follow exactly):
-0. FIRST — infer the company stage from signals in the JD:
-   - STARTUP signals: "wear many hats", "early team", "Series A/B/C", "fast-paced", "scrappy", "founding team", "bootstrapped", "we're building from scratch", small headcount, <50 people implied.
-   - ENTERPRISE signals: "established processes", "cross-functional stakeholders", "enterprise", "global", "300+ employees", "formal planning cycles", "Fortune 500".
-   - STARTUP WEIGHTING RULE: At a STARTUP, a founder or solo builder who took a product from 0→1, ran customer discovery, made product decisions, and shipped has DIRECT ownership experience equivalent to a PM. NEVER say a founder "lacks high-ownership experience" — that is factually backward. At an ENTERPRISE, formal PM credentials (PRDs, roadmaps, A/B testing infrastructure, large cross-functional teams) are required.
-1. Identify the 3-5 MUST-HAVE competencies the role explicitly requires.
-2. For each must-have, determine if the candidate has DIRECT experience (they have literally done that thing) vs TRANSFERABLE (adjacent but not the same thing). Apply the company stage context from step 0.
-3. DIRECT experience in a must-have = contributes normally to the score.
-   TRANSFERABLE but not direct = contributes half credit at most.
-   Zero evidence on a CORE must-have = hard cap. But distinguish CORE (the role cannot function without it) from SECONDARY (nice-to-have listed in the JD). Missing one secondary skill with 4+ core must-haves covered should not drop the score below 7 at a startup.
-4. Soft skills (communication, work ethic, leadership) can only add +1 at most.
-5. Do NOT let skill keywords in the candidate's profile fool you. Read what they actually DID, not what they listed.
-6. LOCATION: If the JD specifies a required location and the candidate's profile shows a different city/country, note this explicitly in the honestTake. It is a practical barrier but not a competency gap — do not use it to lower the score.
+STEP 1 — READ THE ENVIRONMENT:
+Infer what this organization values based on signals in the JD:
+- LEAN/SMALL ORG signals: generalist expectations, "wear many hats", small team size implied, bootstrapped, early-stage, "you'll own X end-to-end", informal structure.
+- LARGE/STRUCTURED ORG signals: formal credentials required, large teams, established processes, compliance-heavy, enterprise clients, specific certifications or degrees required.
+This matters: in a lean org, demonstrated results through ANY path (self-taught, freelance, founder, side project, cross-functional role) count as real experience. In a structured org, formal credentials, specific titles, and process experience matter more.
+
+STEP 2 — IDENTIFY WHAT THE ROLE ACTUALLY REQUIRES:
+List the 3-5 CORE competencies this role cannot function without. Be specific — not "communication" but things like "cold outreach + pipeline management", "regulatory filing experience", "managing a team of 5+", "writing production SQL", "diagnosing and treating X condition". Separate these from SECONDARY competencies (nice-to-have, listed but not central).
+
+STEP 3 — EVALUATE THE CANDIDATE HONESTLY:
+For each core competency:
+- DIRECT: They have literally done this thing, in any context (work, project, freelance, own business, academic).
+- TRANSFERABLE: They've done something meaningfully adjacent but not the same.
+- No evidence: They have not done this.
+Do NOT be fooled by listed skills. "Managed relationships" as a skill is not the same as having a book of accounts. "Leadership" as a skill is not the same as having managed direct reports. Read what they actually DID.
+
+STEP 4 — SCORE:
+- All or most core competencies covered with DIRECT evidence → 8–10
+- Most cores covered, one gap or one transferable → 6–8 depending on how critical that gap is
+- Missing one CORE competency with no direct evidence → cap at 6
+- Missing two or more core competencies → cap at 4
+- Covering secondary skills does NOT raise the score if core gaps exist.
+- Covering almost everything except one secondary skill should NOT drop the score below 7.
+
+STEP 5 — FLAG PRACTICAL BARRIERS:
+If the JD requires a specific location, license, certification, or degree and the candidate doesn't have it, note it clearly in the honestTake as a practical barrier. Do not use it to change the score — it's separate from competency fit.
 
 JOB DESCRIPTION:
 ${jobDescription.slice(0, 2000)}
@@ -182,12 +195,12 @@ ${jobDescription.slice(0, 2000)}
 CANDIDATE PROFILE (what they actually did):
 ${JSON.stringify(profile)}
 
-Return JSON:
+Return JSON only:
 {
-  "score": <1-10 integer — apply the rules above>,
-  "strongestThread": "<one sentence: the single most relevant thing they have actually done, not a skill they listed>",
-  "biggestGap": "<one sentence: the most important CORE competency the job requires that the candidate has zero direct evidence for — or 'None identified' if all core competencies are covered>",
-  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's genuinely strong, what's actually missing, any practical barriers like location, realistic odds>"
+  "score": <integer 1–10>,
+  "strongestThread": "<one sentence: the single most relevant thing they have actually done — specific, not generic>",
+  "biggestGap": "<one sentence: the most critical competency the role requires that the candidate has no direct evidence for — or 'No critical gaps identified' if core competencies are covered>",
+  "honestTake": "<2-3 sentences: direct hiring-manager read — what genuinely works, what's actually missing, any practical barriers, realistic odds>"
 }`;
 
       try {
