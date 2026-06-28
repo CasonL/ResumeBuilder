@@ -155,8 +155,9 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
       const profile = {
         experiences: (masterData.experiences || []).map((e: any) => `${e.role} at ${e.company}: ${(e.bullets || []).join('; ')}`),
         leadership: (masterData.leadership || []).map((l: any) => `${l.role} at ${l.company}: ${(l.bullets || []).join('; ')}`),
-        projects: (masterData.projects || []).map((p: any) => `${p.name}: ${(p.bullets || []).join('; ')}`),
+        projects: (masterData.projects || []).map((p: any) => `${p.name || p.title}: ${(p.bullets || []).join('; ')}`),
         skills: (masterData.skills || []).flatMap((s: any) => s.items || []),
+        ...(masterData.websiteContext ? { portfolioContext: masterData.websiteContext } : {}),
       };
 
       const fitPrompt = `You are a senior hiring manager. Score how well this candidate fits this job. Be brutally honest — do not inflate for soft skills or potential.

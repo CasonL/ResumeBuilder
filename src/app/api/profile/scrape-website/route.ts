@@ -10,14 +10,9 @@ function htmlToText(html: string): string {
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
     .replace(/<(br|p|li|h[1-6]|div|section|article)[^>]*>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#\d+;/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, ' ')
+    .replace(/\s{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 export async function POST(request: NextRequest) {
@@ -37,11 +32,10 @@ export async function POST(request: NextRequest) {
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) throw new Error(`Site returned ${res.status}`);
-    const html = await res.text();
-    pageText = htmlToText(html).slice(0, 8000);
+    pageText = htmlToText(await res.text()).slice(0, 8000);
   } catch (e) {
     return NextResponse.json(
-      { error: `Could not fetch the site: ${e instanceof Error ? e.message : 'Unknown error'}. Try a different URL or paste the text manually.` },
+      { error: `Could not reach that site: ${e instanceof Error ? e.message : 'Unknown error'}. Try a different URL.` },
       { status: 422 }
     );
   }
@@ -50,61 +44,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No readable text found on this page.' }, { status: 422 });
   }
 
-  const prompt = `You are extracting professional profile information from a personal portfolio or professional website.
-
-WEBSITE TEXT:
-${pageText}
-
-Extract any profile-relevant information and return VALID JSON with this structure (omit sections with no data):
-{
-  "personalInfo": {
-    "name": "full name if found",
-    "email": "email if found",
-    "linkedin": "linkedin url if found",
-    "summary": "a 1-2 sentence positioning statement based on how they describe themselves"
-  },
-  "experiences": [
-    {
-      "id": "kebab-case-id",
-      "role": "job title",
-      "company": "company name",
-      "dates": "date range if found",
-      "bullets": ["what they did, built, or achieved"],
-      "tags": []
-    }
-  ],
-  "projects": [
-    {
-      "id": "kebab-case-id",
-      "title": "project name",
-      "description": "brief description",
-      "bullets": ["key detail or achievement"],
-      "tags": ["tech or skill used"]
-    }
-  ],
-  "leadership": [],
-  "skills": [
-    {
-      "category": "category name",
-      "items": ["skill 1", "skill 2"]
-    }
-  ],
-  "certifications": []
-}
-
-RULES:
-- Only extract what is actually on the page. Do NOT invent anything.
-- Portfolio projects should go in "projects", work history in "experiences".
-- If something is ambiguous, put it in projects.
-- Skills mentioned in project descriptions count.`;
-
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
-    temperature: 0.2,
+    messages: [{
+      role: 'user',
+      content: `You are reading someone's personal portfolio or professional website. Write a thorough, factual summary of who this person is and what they have built or done professionally. Cover: what they've built or shipped, roles they've held, notable projects, skills and technologies used, and any measurable achievements. Be specific — names, numbers, and outcomes where available. Write in third person. 3-6 sentences. Do not invent anything not on the page.\n\nWEBSITE TEXT:\n${pageText}`,
+    }],
+    temperature: 0.3,
+    max_tokens: 400,
   });
 
-  const profile = JSON.parse(completion.choices[0].message.content || '{}');
-  return NextResponse.json({ success: true, profile, requiresConfirmation: true });
+  const summary = completion.choices[0].message.content?.trim() || '';
+  return NextResponse.json({ success: true, summary, url: fetchUrl });
 }

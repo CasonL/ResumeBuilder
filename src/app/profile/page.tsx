@@ -620,13 +620,16 @@ function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void })
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [parsedData, setParsedData] = useState<any>(null);
+  const [summary, setSummary] = useState('');
+  const [scrapedUrl, setScrapedUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const handleScrape = async () => {
     if (!url.trim()) { setError('Please enter a URL'); return; }
     setIsLoading(true);
     setError('');
+    setSummary('');
     try {
       const res = await fetch('/api/profile/scrape-website', {
         method: 'POST',
@@ -635,7 +638,8 @@ function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Scrape failed');
-      setParsedData(data.profile);
+      setSummary(data.summary);
+      setScrapedUrl(data.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
@@ -643,18 +647,20 @@ function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void })
     }
   };
 
-  const handleConfirm = async () => {
+  const handleSave = async () => {
     setIsSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/profile/confirm', {
+      const profileRes = await fetch('/api/profile');
+      const currentProfile = await profileRes.json();
+      const merged = { ...currentProfile, websiteContext: summary, websiteUrl: scrapedUrl };
+      const saveRes = await fetch('/api/profile/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsedData),
+        body: JSON.stringify(merged),
       });
-      if (!res.ok) throw new Error('Failed to save');
-      setParsedData(null);
-      setUrl('');
+      if (!saveRes.ok) throw new Error('Failed to save');
+      setSaved(true);
       onImportComplete();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save');
@@ -663,52 +669,58 @@ function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void })
     }
   };
 
-  if (parsedData) {
-    return (
-      <div className="resume-uploader">
-        <div className="review-header">
-          <h3>Review Extracted Info</h3>
-          <p className="review-subtitle">AI extracted the following from the site. Review and confirm to merge into your profile.</p>
-        </div>
-        <ProfileEditor data={parsedData} onChange={setParsedData} />
-        {error && <div className="error-message" style={{ marginTop: '16px' }}>{error}</div>}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-          <button onClick={() => setParsedData(null)} className="button-secondary" style={{ flex: 1 }} disabled={isSaving}>Cancel</button>
-          <button onClick={handleConfirm} className="button-primary" style={{ flex: 1 }} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Confirm & Save to Profile'}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="resume-uploader">
       <div className="form-group">
         <label htmlFor="website-url">Portfolio or Website URL</label>
         <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '8px' }}>
-          Works best with personal portfolio sites, GitHub profile pages, or any page describing your work.
-          Doesn't work well with JavaScript-only SPAs (React/Next apps with no server-rendered HTML).
+          Enter your portfolio, personal site, or any page describing your work. The AI will read it and write a summary that gets used when building and scoring your resumes.
         </p>
-        <input
-          id="website-url"
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleScrape()}
-          placeholder="https://yourportfolio.com"
-          style={{ width: '100%', marginBottom: '12px' }}
-        />
-        <button
-          onClick={handleScrape}
-          className="button-primary"
-          disabled={isLoading || !url.trim()}
-          style={{ width: '100%' }}
-        >
-          {isLoading ? 'Scraping & Extracting...' : 'Import from Website'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            id="website-url"
+            type="url"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setSummary(''); setSaved(false); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleScrape()}
+            placeholder="https://yourportfolio.com"
+            style={{ flex: 1 }}
+          />
+          <button onClick={handleScrape} className="button-primary" disabled={isLoading || !url.trim()}>
+            {isLoading ? 'Reading...' : 'Import'}
+          </button>
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '6px' }}>
+          Note: works best with static sites. JavaScript-only apps (SPAs) may return little text.
+        </p>
       </div>
+
       {error && <div className="error-message" style={{ marginTop: '12px' }}>{error}</div>}
+
+      {summary && (
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <label style={{ margin: 0 }}>AI Summary</label>
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Edit if needed</span>
+          </div>
+          <div style={{ padding: '10px', background: 'var(--card-hover, rgba(99,102,241,0.05))', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '13px', color: 'var(--muted)', marginBottom: '10px', lineHeight: 1.6 }}>
+            This summary will be used everywhere in the app — resume generation, fit scoring, and chat — as additional context about your background.
+          </div>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            rows={5}
+            style={{ width: '100%', marginBottom: '12px' }}
+          />
+          {saved ? (
+            <div className="success-message">✓ Saved — your website context is now active across the app.</div>
+          ) : (
+            <button onClick={handleSave} className="button-primary" disabled={isSaving} style={{ width: '100%' }}>
+              {isSaving ? 'Saving...' : 'Save to Profile'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

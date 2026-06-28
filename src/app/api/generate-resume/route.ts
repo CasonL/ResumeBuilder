@@ -78,7 +78,10 @@ export async function POST(request: NextRequest) {
 
     // Decrypt profile data
     const masterData = decryptData(profileRecord.encrypted_data, encryptionKey);
-    const personalContext = masterData.personalContext || '';
+    const personalContext = [
+      masterData.personalContext,
+      masterData.websiteContext ? `PORTFOLIO/WEBSITE CONTEXT:\n${masterData.websiteContext}` : '',
+    ].filter(Boolean).join('\n\n');
 
     const prompt = buildGenerateResumePrompt(jobDescription, masterData, userPrefs, personalContext);
 
@@ -108,7 +111,8 @@ export async function POST(request: NextRequest) {
     // PASS 2: Refine recommendations with personal context
     let finalResult = draftResult;
     
-    if (personalContext && personalContext.trim()) {
+    const hasContext = personalContext && personalContext.trim();
+    if (hasContext) {
       const refinementPrompt = buildRefinementPrompt(jobDescription, draftResult, personalContext);
 
       try {
