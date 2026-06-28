@@ -653,13 +653,10 @@ function WebsiteImporter({ onImportComplete, existingContext, existingUrl }: { o
     setIsSaving(true);
     setError('');
     try {
-      const profileRes = await fetch('/api/profile');
-      const currentProfile = await profileRes.json();
-      const merged = { ...currentProfile, websiteContext: summary, websiteUrl: scrapedUrl };
-      const saveRes = await fetch('/api/profile/confirm', {
+      const saveRes = await fetch('/api/profile/patch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(merged),
+        body: JSON.stringify({ websiteContext: summary, websiteUrl: scrapedUrl }),
       });
       if (!saveRes.ok) throw new Error('Failed to save');
       setSaved(true);
