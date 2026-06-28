@@ -1912,17 +1912,11 @@ textarea::placeholder {
 }
 
 .profile-editor {
-  max-height: 60vh;
-  overflow-y: auto;
   padding-right: 8px;
 }
 
 .editor-section {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: var(--card2);
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
+  margin-bottom: 32px;
 }
 
 .editor-section h4 {
