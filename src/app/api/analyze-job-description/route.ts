@@ -164,16 +164,17 @@ Be consistent but flexible. Match the job's actual priorities, not a rigid formu
 
 SCORING RULES (follow exactly):
 0. FIRST — infer the company stage from signals in the JD:
-   - STARTUP signals: "wear many hats", "early team", "Series A/B/C", "fast-paced", "scrappy", "founding team", "we're building from scratch", small headcount.
+   - STARTUP signals: "wear many hats", "early team", "Series A/B/C", "fast-paced", "scrappy", "founding team", "bootstrapped", "we're building from scratch", small headcount, <50 people implied.
    - ENTERPRISE signals: "established processes", "cross-functional stakeholders", "enterprise", "global", "300+ employees", "formal planning cycles", "Fortune 500".
-   - This matters for weighting: at a STARTUP, founder/builder experience (shipped a product, ran discovery, made product decisions solo) counts as DIRECT experience for PM-type roles. At an ENTERPRISE, formal PM credentials (PRDs, roadmaps, A/B testing infrastructure, large cross-functional teams) are required.
-1. Identify the 3-5 MUST-HAVE competencies the role explicitly requires (e.g. "contract renewals", "CRM maintenance", "pricing negotiations", "B2B account management").
+   - STARTUP WEIGHTING RULE: At a STARTUP, a founder or solo builder who took a product from 0→1, ran customer discovery, made product decisions, and shipped has DIRECT ownership experience equivalent to a PM. NEVER say a founder "lacks high-ownership experience" — that is factually backward. At an ENTERPRISE, formal PM credentials (PRDs, roadmaps, A/B testing infrastructure, large cross-functional teams) are required.
+1. Identify the 3-5 MUST-HAVE competencies the role explicitly requires.
 2. For each must-have, determine if the candidate has DIRECT experience (they have literally done that thing) vs TRANSFERABLE (adjacent but not the same thing). Apply the company stage context from step 0.
 3. DIRECT experience in a must-have = contributes normally to the score.
    TRANSFERABLE but not direct = contributes half credit at most.
-   Zero evidence = a hard cap: missing even ONE core must-have keeps the score at 6 or below. Missing two or more caps it at 4 or below.
-4. Soft skills (communication, work ethic, leadership) can only add +1 at most. They cannot compensate for missing core competencies.
-5. Do NOT let skill keywords in the candidate's profile fool you. "Customer Relationship Management" as a listed skill is NOT the same as having done B2B account management. "Sales" is NOT the same as renewal management. Read what they actually DID, not what they listed.
+   Zero evidence on a CORE must-have = hard cap. But distinguish CORE (the role cannot function without it) from SECONDARY (nice-to-have listed in the JD). Missing one secondary skill with 4+ core must-haves covered should not drop the score below 7 at a startup.
+4. Soft skills (communication, work ethic, leadership) can only add +1 at most.
+5. Do NOT let skill keywords in the candidate's profile fool you. Read what they actually DID, not what they listed.
+6. LOCATION: If the JD specifies a required location and the candidate's profile shows a different city/country, note this explicitly in the honestTake. It is a practical barrier but not a competency gap — do not use it to lower the score.
 
 JOB DESCRIPTION:
 ${jobDescription.slice(0, 2000)}
@@ -183,10 +184,10 @@ ${JSON.stringify(profile)}
 
 Return JSON:
 {
-  "score": <1-10 integer — apply the hard caps above>,
+  "score": <1-10 integer — apply the rules above>,
   "strongestThread": "<one sentence: the single most relevant thing they have actually done, not a skill they listed>",
-  "biggestGap": "<one sentence: the most important must-have competency the job requires that the candidate has zero direct evidence for>",
-  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's real, what's missing, realistic odds>"
+  "biggestGap": "<one sentence: the most important CORE competency the job requires that the candidate has zero direct evidence for — or 'None identified' if all core competencies are covered>",
+  "honestTake": "<2-3 sentences: blunt hiring-manager read — what's genuinely strong, what's actually missing, any practical barriers like location, realistic odds>"
 }`;
 
       try {
