@@ -18,6 +18,8 @@ interface ProfileData {
     summary?: string;
   };
   personalContext?: string;
+  websiteContext?: string;
+  websiteUrl?: string;
   education: {
     degree?: string;
     institution?: string;
@@ -139,9 +141,9 @@ export default function ProfilePage() {
             <h2>Import from Website</h2>
             <p className="section-subtitle">
               Enter the URL of your portfolio, personal site, or any page that describes your work.
-              We'll scrape the text and extract projects, experience, and skills.
+              We'll scrape the text and write a summary used everywhere in the app.
             </p>
-            <WebsiteImporter onImportComplete={refreshProfile} />
+            <WebsiteImporter onImportComplete={refreshProfile} existingContext={profile?.websiteContext} existingUrl={profile?.websiteUrl} />
           </div>
         )}
       </div>
@@ -616,14 +618,14 @@ function ResumeUploader({ onUploadComplete }: { onUploadComplete: () => void }) 
   );
 }
 
-function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void }) {
-  const [url, setUrl] = useState('');
+function WebsiteImporter({ onImportComplete, existingContext, existingUrl }: { onImportComplete: () => void; existingContext?: string; existingUrl?: string }) {
+  const [url, setUrl] = useState(existingUrl || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [summary, setSummary] = useState('');
-  const [scrapedUrl, setScrapedUrl] = useState('');
+  const [summary, setSummary] = useState(existingContext || '');
+  const [scrapedUrl, setScrapedUrl] = useState(existingUrl || '');
   const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(!!existingContext);
 
   const handleScrape = async () => {
     if (!url.trim()) { setError('Please enter a URL'); return; }
@@ -712,13 +714,12 @@ function WebsiteImporter({ onImportComplete }: { onImportComplete: () => void })
             rows={5}
             style={{ width: '100%', marginBottom: '12px' }}
           />
-          {saved ? (
-            <div className="success-message">✓ Saved — your website context is now active across the app.</div>
-          ) : (
-            <button onClick={handleSave} className="button-primary" disabled={isSaving} style={{ width: '100%' }}>
-              {isSaving ? 'Saving...' : 'Save to Profile'}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleSave} className="button-primary" disabled={isSaving} style={{ flex: 1 }}>
+              {isSaving ? 'Saving...' : saved ? '✓ Saved — Update' : 'Save to Profile'}
             </button>
-          )}
+          </div>
+          {saved && <div className="success-message" style={{ marginTop: '8px' }}>Active across the app — re-import anytime to refresh.</div>}
         </div>
       )}
     </div>
