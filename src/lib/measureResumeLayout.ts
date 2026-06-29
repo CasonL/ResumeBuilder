@@ -27,7 +27,7 @@ export interface LayoutReport {
 // Print-mode metrics (font: 11.5px, line-height: 1.35)
 const LINE_PX = 11.5 * 1.35;   // ~15.5px per line of body text
 const CHARS_PER_LINE = 90;      // characters per line at content width
-const PAGE_H = 832;             // 8.67in × 96dpi usable content
+const PAGE_H = 792;             // 8.67in × 96dpi (832px) minus 40px safety buffer
 
 // Fixed-height building blocks (derived from actual globals.css values)
 // h2: 13px × 1.35 line-height ≈ 17.6px text + 6px padding-bottom + 12px margin-bottom = 35px
