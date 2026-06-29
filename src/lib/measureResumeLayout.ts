@@ -1,6 +1,6 @@
 /**
- * Applies print CSS to the resume element, measures actual rendered heights,
- * then reverts. Returns a structured layout report the AI can act on.
+ * Estimates resume print-mode height from first principles using character counts.
+ * Avoids scrollHeight (which reads screen CSS, not print CSS) for accuracy.
  */
 export interface BulletMeasurement {
   text: string;
@@ -24,71 +24,119 @@ export interface LayoutReport {
   roles: RoleMeasurement[];
 }
 
-const PRINT_FONT_PX = 11.5;
-const PAGE_CONTENT_HEIGHT_PX = 832; // 8.67in * 96dpi
-const CHARS_PER_LINE = 92;
+// Print-mode metrics (font: 11.5px, line-height: 1.35)
+const LINE_PX = 11.5 * 1.35;   // ~15.5px per line of body text
+const CHARS_PER_LINE = 90;      // characters per line at content width
+const PAGE_H = 832;             // 8.67in × 96dpi usable content
 
-function estimateLines(text: string): number {
+// Fixed-height building blocks (measured from print preview)
+const H_HEADER       = 74;  // name + tagline + contact bar
+const H_SUMMARY      = 10;  // summary top margin
+const H_SECTION_H2   = 20;  // "EXPERIENCE" / "SKILLS" heading
+const H_SECTION_GAP  = 14;  // gap between major sections
+const H_ROLE_HEAD    = 20;  // role title + company + dates row
+const H_ROLE_GAP     = 10;  // gap between roles within a section
+const H_BULLET_PAD   = 4;   // top margin per bullet li
+const H_EDUCATION    = 32;  // education block (degree + focus)
+const H_SKILL_CAT    = 28;  // one skill category label + items row
+const H_CERT_ENTRY   = 28;  // one certification entry
+
+function lines(text: string): number {
   return Math.ceil(text.length / CHARS_PER_LINE);
 }
 
+function bulletH(text: string): number {
+  return lines(text) * LINE_PX + H_BULLET_PAD;
+}
+
 export async function measureResumeLayout(
-  resumeEl: HTMLElement,
+  _el: HTMLElement,
   resumeData: any,
   masterData: any
 ): Promise<LayoutReport> {
-  // --- Apply print CSS ---
-  const prev = {
-    fontSize: resumeEl.style.fontSize,
-    lineHeight: resumeEl.style.lineHeight,
+  const hidden: string[] = resumeData.customizations?.hiddenSections || [];
+  const hide = (s: string) => hidden.includes(s);
+
+  let h = H_HEADER;
+
+  // Summary
+  const summary = resumeData.customizations?.summary ?? masterData?.personalInfo?.summary;
+  if (summary && !hide('summary')) {
+    h += H_SUMMARY + lines(summary) * LINE_PX + H_SECTION_GAP;
+  }
+
+  // Education
+  if (!hide('education') && masterData?.education?.length) {
+    h += H_SECTION_H2 + H_EDUCATION + H_SECTION_GAP;
+  }
+
+  // Helper: build roles for a section
+  const buildSection = (selectedIds: string[], pool: any[], sectionKey: string) => {
+    if (hide(sectionKey) || !selectedIds?.length) return 0;
+    let sh = H_SECTION_H2;
+    selectedIds.forEach((id: string, idx: number) => {
+      const item = pool.find((x: any) => x.id === id);
+      if (!item) return;
+      const bullets: string[] =
+        resumeData.customizations?.bulletPointAdjustments?.[id] || item.bullets || [];
+      sh += H_ROLE_HEAD;
+      bullets.forEach((b: string) => { sh += bulletH(b); });
+      if (idx < selectedIds.length - 1) sh += H_ROLE_GAP;
+    });
+    sh += H_SECTION_GAP;
+    return sh;
   };
-  resumeEl.style.fontSize = `${PRINT_FONT_PX}px`;
-  resumeEl.style.lineHeight = '1.35';
-  resumeEl.style.setProperty('--resume-pad-top', '0.08in');
-  resumeEl.style.setProperty('--resume-pad-x', '0.35in');
-  resumeEl.style.setProperty('--resume-pad-bottom', '0.25in');
-  resumeEl.style.setProperty('--resume-section-gap', '14px');
-  resumeEl.style.setProperty('--resume-role-gap', '10px');
 
-  await new Promise((r) => setTimeout(r, 150));
-  const totalHeightPx = resumeEl.scrollHeight;
+  const allExp  = masterData?.experiences || [];
+  const allLead = masterData?.leadership   || [];
+  h += buildSection(resumeData.selectedExperiences, allExp,  'experience');
+  h += buildSection(resumeData.selectedLeadership,  allLead, 'leadership');
 
-  // --- Revert ---
-  resumeEl.style.fontSize = prev.fontSize;
-  resumeEl.style.lineHeight = prev.lineHeight;
-  resumeEl.style.removeProperty('--resume-pad-top');
-  resumeEl.style.removeProperty('--resume-pad-x');
-  resumeEl.style.removeProperty('--resume-pad-bottom');
-  resumeEl.style.removeProperty('--resume-section-gap');
-  resumeEl.style.removeProperty('--resume-role-gap');
+  // Projects
+  if (!hide('projects') && resumeData.selectedProjects?.length) {
+    const proj = masterData?.projects || [];
+    const resolved = resumeData.selectedProjects.filter((id: string) => proj.find((p: any) => p.id === id));
+    if (resolved.length) {
+      h += H_SECTION_H2;
+      resolved.forEach((id: string) => {
+        const p = proj.find((x: any) => x.id === id);
+        const bullets = resumeData.customizations?.bulletPointAdjustments?.[id] || p?.bullets || [];
+        h += H_ROLE_HEAD;
+        bullets.forEach((b: string) => { h += bulletH(b); });
+      });
+      h += H_SECTION_GAP;
+    }
+  }
 
-  // --- Build role measurements from JSON data ---
+  // Skills
+  if (!hide('skills') && resumeData.selectedSkills?.length) {
+    const normalized = typeof resumeData.selectedSkills[0] === 'string'
+      ? [{ category: 'Skills', items: resumeData.selectedSkills }]
+      : resumeData.selectedSkills;
+    h += H_SECTION_H2 + normalized.length * H_SKILL_CAT + H_SECTION_GAP;
+  }
+
+  // Certifications
+  if (!hide('certifications') && masterData?.certifications?.length) {
+    h += H_SECTION_H2 + masterData.certifications.length * H_CERT_ENTRY + H_SECTION_GAP;
+  }
+
+  // Build role list for AI
   const allIds = [
     ...(resumeData.selectedExperiences || []),
-    ...(resumeData.selectedLeadership || []),
+    ...(resumeData.selectedLeadership  || []),
   ];
-  const allItems = [
-    ...(masterData?.experiences || []),
-    ...(masterData?.leadership || []),
-  ];
-
+  const allItems = [...allExp, ...allLead];
   const roles: RoleMeasurement[] = allIds.map((id: string) => {
     const item = allItems.find((x: any) => x.id === id);
-    const adjustedBullets: string[] =
-      resumeData.customizations?.bulletPointAdjustments?.[id] ||
-      item?.bullets ||
-      [];
-
-    const bullets: BulletMeasurement[] = adjustedBullets.map((text: string) => {
-      const lines = estimateLines(text);
-      return {
-        text,
-        heightPx: lines * PRINT_FONT_PX * 1.35,
-        charCount: text.length,
-        estimatedLines: lines,
-      };
-    });
-
+    const bTexts: string[] =
+      resumeData.customizations?.bulletPointAdjustments?.[id] || item?.bullets || [];
+    const bullets: BulletMeasurement[] = bTexts.map((text) => ({
+      text,
+      heightPx: bulletH(text),
+      charCount: text.length,
+      estimatedLines: lines(text),
+    }));
     return {
       id,
       role: resumeData.customizations?.roleAdjustments?.[id]?.role || item?.role || id,
@@ -99,9 +147,9 @@ export async function measureResumeLayout(
   });
 
   return {
-    totalHeightPx,
-    pageHeightPx: PAGE_CONTENT_HEIGHT_PX,
-    overflowPx: Math.max(0, totalHeightPx - PAGE_CONTENT_HEIGHT_PX),
+    totalHeightPx: Math.round(h),
+    pageHeightPx: PAGE_H,
+    overflowPx: Math.max(0, Math.round(h - PAGE_H)),
     roles,
   };
 }

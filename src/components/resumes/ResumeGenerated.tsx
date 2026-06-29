@@ -609,7 +609,7 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
             </section>
           )}
 
-          {!isSectionHidden('projects') && data.selectedProjects && data.selectedProjects.length > 0 && (
+          {!isSectionHidden('projects') && data.selectedProjects && data.selectedProjects.length > 0 && data.selectedProjects.some((id: string) => masterData.projects?.find((p: any) => p.id === id)) && (
             <section>
               <div className="section-header-row">
                 <h2>Projects</h2>
