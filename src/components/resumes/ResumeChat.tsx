@@ -33,6 +33,16 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoResize = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 20 * 5 + 20;
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+  };
 
   const userMessageCount = messages.filter((m) => m.role === 'user').length;
   const atLimit = userMessageCount >= messageLimit;
@@ -77,6 +87,7 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
   const handleSendRaw = async (message: string) => {
     if (!message.trim() || isLoading) return;
     setInput('');
+    if (inputRef.current) { inputRef.current.style.height = 'auto'; inputRef.current.style.overflowY = 'hidden'; }
     setMessages((prev) => [...prev, { role: 'user', content: message }]);
     setIsLoading(true);
     setPendingChange(null);
@@ -425,13 +436,14 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
           background: '#1e222d',
         }}
       >
-        <input
-          type="text"
+        <textarea
+          ref={inputRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => { setInput(e.target.value); autoResize(); }}
           onKeyDown={handleKeyDown}
           disabled={atLimit}
           placeholder={atLimit ? 'Message limit reached' : 'Ask or tell me what to change...'}
+          rows={1}
           style={{
             flex: 1,
             padding: '10px 12px',
@@ -442,6 +454,9 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
             fontSize: '13px',
             outline: 'none',
             cursor: atLimit ? 'not-allowed' : 'text',
+            resize: 'none',
+            lineHeight: '20px',
+            overflowY: 'hidden',
           }}
         />
         <button

@@ -21,6 +21,16 @@ export default function ProfileChat({ profileData, onUpdate }: ProfileChatProps)
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const autoResize = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 20 * 5 + 20;
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,6 +40,7 @@ export default function ProfileChat({ profileData, onUpdate }: ProfileChatProps)
     if (!input.trim() || isLoading) return;
     const userMessage = input.trim();
     setInput('');
+    if (inputRef.current) { inputRef.current.style.height = 'auto'; inputRef.current.style.overflowY = 'hidden'; }
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
@@ -160,15 +171,18 @@ export default function ProfileChat({ profileData, onUpdate }: ProfileChatProps)
         padding: '12px', borderTop: '1px solid #2a2f3a',
         display: 'flex', gap: '8px', background: '#1e222d',
       }}>
-        <input
-          type="text" value={input}
-          onChange={(e) => setInput(e.target.value)}
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => { setInput(e.target.value); autoResize(); }}
           onKeyDown={handleKeyDown}
           placeholder="Tell me about your experience..."
+          rows={1}
           style={{
             flex: 1, padding: '10px 12px', borderRadius: '10px',
             border: '1px solid #2a2f3a', background: '#171b24',
             color: '#fff', fontSize: '13px', outline: 'none',
+            resize: 'none', lineHeight: '20px', overflowY: 'hidden',
           }}
         />
         <button
