@@ -293,6 +293,12 @@ export default function ResumeGenerated({ isActive, data, masterData, isEditing 
               <span>{data.customizations.phone ?? masterData.personalInfo.phone}</span>
               <span className="contact-sep">•</span>
               <span>{data.customizations.location ?? masterData.personalInfo.location}</span>
+              {(masterData.personalInfo?.website || masterData.websiteUrl) && (
+                <>
+                  <span className="contact-sep">•</span>
+                  <span>{masterData.personalInfo?.website || masterData.websiteUrl}</span>
+                </>
+              )}
             </>
           )}
         </div>
