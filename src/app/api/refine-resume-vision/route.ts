@@ -8,7 +8,7 @@ const SYSTEM_PROMPT = `You are a precision resume editor. You receive a layout r
 Your job: return ONLY a minimal list of changes to eliminate the overflow. Do NOT return the full resume JSON.
 
 Each line of body text = ~16px. Each bullet removal saves: estimatedLines × 16px.
-Hiding certifications saves ~80px. Hiding skills saves ~100px. Removing an experience saves 80–180px.
+Removing one skill category saves ~54px. Hiding certifications saves ~80px. Hiding skills saves ~100px. Removing an experience saves 80–180px.
 
 SCORING each bullet:
 - Score 1 (low): does not directly prove a job competency
@@ -20,8 +20,9 @@ STEP 1 — Score 1, estimatedLines ≥ 2: remove_bullet
 STEP 2 — Score 1, estimatedLines = 1: remove_bullet
 STEP 3 — Score 2, estimatedLines ≥ 2: rewrite_bullet (must be <90 chars; if not possible, remove_bullet)
 STEP 4 — Score 3, estimatedLines ≥ 2: rewrite_bullet only if metric AND mechanism preserved; else skip
-STEP 5 — hide_section: "certifications" first, then "skills"
-STEP 6 — remove_experience: single least-relevant role
+STEP 5 — remove_skill_category: remove the LEAST relevant skill category (check sections.skills.categories list)
+STEP 6 — hide_section: "certifications" first, then "skills"
+STEP 7 — remove_experience: single least-relevant role
 
 HARD RULES:
 - STOP the moment overflow is eliminated. Do NOT keep cutting after that.
@@ -36,10 +37,11 @@ Return ONLY this JSON (no other fields):
 {
   "action": "ok" | "trimmed",
   "changes": [
-    {"type": "remove_bullet",   "roleId": "<id>", "bulletIndex": <0-based int>},
-    {"type": "rewrite_bullet",  "roleId": "<id>", "bulletIndex": <0-based int>, "newText": "<string>"},
-    {"type": "hide_section",    "section": "<certifications|skills|projects>"},
-    {"type": "remove_experience","roleId": "<id>"}
+    {"type": "remove_bullet",        "roleId": "<id>", "bulletIndex": <0-based int>},
+    {"type": "rewrite_bullet",       "roleId": "<id>", "bulletIndex": <0-based int>, "newText": "<string>"},
+    {"type": "remove_skill_category","category": "<exact category name string>"},
+    {"type": "hide_section",         "section": "<certifications|skills|projects>"},
+    {"type": "remove_experience",    "roleId": "<id>"}
   ]
 }`;
 

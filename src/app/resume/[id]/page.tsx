@@ -202,8 +202,14 @@ export default function ResumePage({ params }: PageProps) {
     let selectedLead = [...(data.selectedLeadership || [])];
     const allItems = [...(masterData?.experiences || []), ...(masterData?.leadership || [])];
 
+    let selectedSkills = [...(data.selectedSkills || [])];
+
     for (const change of changes) {
-      if (change.type === 'remove_bullet') {
+      if (change.type === 'remove_skill_category') {
+        selectedSkills = selectedSkills.filter((cat: any) =>
+          typeof cat === 'string' ? cat !== change.category : cat.category !== change.category
+        );
+      } else if (change.type === 'remove_bullet') {
         const { roleId, bulletIndex } = change;
         const item = allItems.find((x: any) => x.id === roleId);
         const bullets: string[] = bulletAdj[roleId] || item?.bullets || [];
@@ -224,6 +230,7 @@ export default function ResumePage({ params }: PageProps) {
       ...data,
       selectedExperiences: selectedExp,
       selectedLeadership: selectedLead,
+      selectedSkills,
       customizations: { ...data.customizations, bulletPointAdjustments: bulletAdj, hiddenSections: hidden },
     };
   };
@@ -232,7 +239,7 @@ export default function ResumePage({ params }: PageProps) {
     const hidden: string[] = data.customizations?.hiddenSections || [];
     return {
       certifications: { visible: !hidden.includes('certifications') && !!(masterData?.certifications?.length), count: masterData?.certifications?.length || 0 },
-      skills:         { visible: !hidden.includes('skills')         && !!(data.selectedSkills?.length),          categories: (data.selectedSkills || []).length },
+      skills:         { visible: !hidden.includes('skills') && !!(data.selectedSkills?.length), categoryCount: (data.selectedSkills || []).length, categories: (data.selectedSkills || []).map((c: any) => typeof c === 'string' ? c : c.category) },
       projects:       { visible: !hidden.includes('projects')       && !!(data.selectedProjects?.length),        count: (data.selectedProjects || []).length },
     };
   };
