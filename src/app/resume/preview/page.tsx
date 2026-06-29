@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { captureResumeWithBoundary } from '@/lib/captureResumeImage';
 
 type LayoutMode = 'compressed' | 'normal' | 'spacious';
 
@@ -13,6 +14,10 @@ export default function ResumePreviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const [showDetails, setShowDetails] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinementStatus, setRefinementStatus] = useState('');
+  const refinedRef = useRef(false);
+  const resumeElRef = useRef<HTMLDivElement>(null);
 
   const printTitle = generatedData?.data?.resumeName || 'Resume';
 
@@ -122,7 +127,48 @@ export default function ResumePreviewPage() {
     );
   }
 
-  const { data, masterData } = generatedData;
+  const { data, masterData, preferences, jobDescription } = generatedData;
+
+  useEffect(() => {
+    if (!generatedData || refinedRef.current || !preferences?.targetLength) return;
+    const targetLength = preferences.targetLength as '1-page' | '2-page';
+    refinedRef.current = true;
+
+    const runRefinement = async (pass: number) => {
+      const el = resumeElRef.current?.querySelector('.resume.show') as HTMLElement | null;
+      if (!el) return;
+      try {
+        setIsRefining(true);
+        setRefinementStatus(`Pass ${pass}: scanning page fit…`);
+        const targetPages = targetLength === '1-page' ? 1 : 2;
+        const screenshot = await captureResumeWithBoundary(el, targetPages);
+        setRefinementStatus(`Pass ${pass}: asking AI to review…`);
+        const res = await fetch('/api/refine-resume-vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ screenshot, resumeData: data, masterData, targetLength, jobDescription }),
+        });
+        const result = await res.json();
+        if (result.action !== 'ok' && result.revisedData) {
+          setRefinementStatus(`Pass ${pass}: applying ${result.cutsMade?.length ?? 0} cut(s)…`);
+          const updated = { ...generatedData, data: result.revisedData };
+          setGeneratedData(updated);
+          sessionStorage.setItem('generatedResume', JSON.stringify(updated));
+          if (pass < 2) {
+            await new Promise((r) => setTimeout(r, 400));
+            await runRefinement(pass + 1);
+          }
+        }
+      } catch (e) {
+        console.error('Vision refinement failed:', e);
+      } finally {
+        setIsRefining(false);
+        setRefinementStatus('');
+      }
+    };
+
+    setTimeout(() => runRefinement(1), 600);
+  }, [generatedData?.data?.resumeName]);
   
   console.log('Data structure:', {
     resumeName: data?.resumeName,
@@ -280,7 +326,13 @@ export default function ResumePreviewPage() {
           )}
         </div>
 
-        <div className="preview-main">
+        <div className="preview-main" ref={resumeElRef}>
+          {isRefining && (
+            <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(15,15,25,0.92)', backdropFilter: 'blur(6px)', color: '#93c5fd', fontSize: '13px', fontWeight: 600, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid rgba(147,197,253,0.2)' }}>
+              <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid #93c5fd', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              ✦ Fitting to page: {refinementStatus}
+            </div>
+          )}
           <div className="page">
             <div className="print-only-metadata" style={{ display: 'none' }} data-resume-title={printTitle}>
               {printTitle}

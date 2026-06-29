@@ -199,6 +199,8 @@ export async function POST(request: NextRequest) {
       resumeId: resumeRecord.id,
       data: finalResult,
       masterData,
+      preferences: userPrefs,
+      jobDescription,
       creditsRemaining: await getCredits(user.id),
     });
 
