@@ -253,8 +253,9 @@ export default function ResumePage({ params }: PageProps) {
       const { measureResumeLayout } = await import('@/lib/measureResumeLayout');
       setIsRefining(true);
       setRefinementStatus('measuring layout…');
-      const rData = generatedResumeData.data;
-      const mData = generatedResumeData.masterData;
+      // Use editedData when in edit mode so the trimmer sees unsaved changes too
+      const rData = (isEditing && editedData) ? editedData : generatedResumeData.data;
+      const mData = (isEditing && editedMasterData) ? editedMasterData : generatedResumeData.masterData;
       const layoutReport = await measureResumeLayout(el, rData, mData);
       if (layoutReport.overflowPx <= 0) {
         setRefinementStatus('already fits ✔');
@@ -290,6 +291,7 @@ export default function ResumePage({ params }: PageProps) {
         setRefinementStatus(`Pass 1: applying ${applied} cut(s)…`);
         const updated = current;
         setGeneratedResumeData((prev: any) => ({ ...prev, data: updated }));
+        if (isEditing) setEditedData(updated);
 
         // Pass 2 — re-measure in memory (pure calc, no DOM needed)
         const { measureResumeLayout: measure2 } = await import('@/lib/measureResumeLayout');
@@ -322,6 +324,7 @@ export default function ResumePage({ params }: PageProps) {
             }
             setRefinementStatus(`Pass 2: applying ${applied2} cut(s)…`);
             setGeneratedResumeData((prev: any) => ({ ...prev, data: current2 }));
+            if (isEditing) setEditedData(current2);
             finalData = current2;
           }
         }
