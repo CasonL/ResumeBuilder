@@ -57,12 +57,23 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
     }).catch(() => {});
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading || atLimit) return;
+  const isQuestion = (text: string) => {
+    const t = text.trim();
+    return t.endsWith('?') || /want me to|should i|shall i|would you like/i.test(t);
+  };
 
-    const userMessage = input.trim();
+  const lastAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant');
+  const showQuickReplies = !isLoading && lastAssistantMsg && isQuestion(lastAssistantMsg.content) && !lastAssistantMsg.hasChanges;
+
+  const handleQuickReply = (reply: string) => {
+    setInput(reply);
+    setTimeout(() => handleSendRaw(reply), 0);
+  };
+
+  const handleSendRaw = async (message: string) => {
+    if (!message.trim() || isLoading) return;
     setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    setMessages((prev) => [...prev, { role: 'user', content: message }]);
     setIsLoading(true);
     setPendingChange(null);
 
@@ -71,26 +82,16 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage,
+          message,
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.details || result.error || 'Failed to get response');
-      }
+      if (!response.ok) throw new Error(result.details || result.error || 'Failed to get response');
 
       setMessages((prev) => {
-        const next = [
-          ...prev,
-          {
-            role: 'assistant' as const,
-            content: result.reply || 'No response',
-            hasChanges: result.hasChanges,
-          },
-        ];
+        const next = [...prev, { role: 'assistant' as const, content: result.reply || 'No response', hasChanges: result.hasChanges }];
         persistHistory(next, messageLimit);
         return next;
       });
@@ -100,16 +101,16 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         setPendingMasterChange(result.modifiedMasterData || null);
       }
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        },
-      ]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` }]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading || atLimit) return;
+
+    await handleSendRaw(input.trim());
   };
 
   const handleApply = () => {
@@ -379,6 +380,30 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         )}
         <div ref={messagesEndRef} />
       </div>
+
+      {showQuickReplies && (
+        <div style={{ padding: '6px 12px 0', display: 'flex', gap: '6px', background: '#1e222d' }}>
+          {['Yes', 'No'].map((reply) => (
+            <button
+              key={reply}
+              onClick={() => handleQuickReply(reply)}
+              disabled={isLoading}
+              style={{
+                padding: '5px 14px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: reply === 'Yes' ? 'rgba(37,99,235,0.25)' : 'rgba(255,255,255,0.06)',
+                color: reply === 'Yes' ? '#93c5fd' : '#9ca3af',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: isLoading ? 'wait' : 'pointer',
+              }}
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div
         style={{
