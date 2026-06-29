@@ -302,7 +302,7 @@ export default function ResumePage({ params }: PageProps) {
     }
   };
 
-  const handleApplyChanges = (modifiedData: any, modifiedMasterData?: any) => {
+  const handleApplyChanges = (modifiedData: any, modifiedMasterData?: any, triggerFit?: boolean) => {
     const baseData = modifiedData || generatedResumeData?.data;
     const baseMaster = modifiedMasterData || generatedResumeData?.masterData;
     const mergedMaster = mergeCustomizationsIntoMaster(baseData, baseMaster);
@@ -317,10 +317,15 @@ export default function ResumePage({ params }: PageProps) {
     setEditedData(cleanedData);
     setEditedMasterData(mergedMaster);
     setIsEditing(true);
-    // Only prompt if resume is taller than when user last dismissed the prompt
-    const currentH = estimateResumeHeight(baseData, baseMaster);
-    if (currentH > fitPromptDismissedAtRef.current) setShowFitPrompt(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (triggerFit) {
+      // AI requested auto-fit — run immediately, skip the banner
+      setShowFitPrompt(false);
+      setTimeout(() => handleFitToPage('1-page'), 400);
+    } else {
+      const currentH = estimateResumeHeight(baseData, baseMaster);
+      if (currentH > fitPromptDismissedAtRef.current) setShowFitPrompt(true);
+    }
   };
 
   const doPrint = () => {

@@ -116,7 +116,13 @@ ${jobDescription}
 RESUME LENGTH CONTEXT:
 - Target: ${targetLength || resume.preferences?.targetLength || 'not specified'}
 - Estimated current height: ${estimatedHeightPx ? `${estimatedHeightPx}px (page limit ~812px${estimatedHeightPx > 812 ? ` — currently ${estimatedHeightPx - 812}px OVER` : ` — ${812 - estimatedHeightPx}px remaining`})` : 'unknown'}
-- If the resume is over the page limit and the user asks to shorten it, trim weaker bullets rather than removing whole sections.`;
+- If the resume is over the page limit and the user asks to shorten it, trim weaker bullets rather than removing whole sections.
+
+PROACTIVE REVIEW:
+- When the user asks how their resume looks, if it is ready, or for a general review, assess: (1) is it over the page limit? (2) are any bullets weak/vague?
+- If issues exist, be direct: "Your resume spills onto a second page by ~Xpx and a couple of bullets could be sharper. Want me to strengthen those and then auto-trim it to 1 page?"
+- When the user agrees to a combined strengthen+trim: rewrite weak bullets first (stronger bullets = better trim decisions), then include "triggerFit": true in your JSON alongside modifiedResumeData — the app will automatically run the fit-to-page tool after the user clicks Apply.
+- Only set "triggerFit": true when you made bullet rewrites AND the resume is currently over the page limit.`;
 
     const chatMessages: Anthropic.MessageParam[] = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -141,12 +147,14 @@ RESUME LENGTH CONTEXT:
 
     let modifiedResumeData = null;
     let modifiedMasterData = null;
+    let triggerFit = false;
     const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[1]);
         modifiedResumeData = parsed.modifiedResumeData || null;
         modifiedMasterData = parsed.modifiedMasterData || null;
+        triggerFit = parsed.triggerFit === true;
       } catch {
         // ignore malformed JSON blocks
       }
@@ -167,6 +175,7 @@ RESUME LENGTH CONTEXT:
       modifiedResumeData: sanitizedResumeData,
       modifiedMasterData: sanitizedMasterData,
       hasChanges: !!sanitizedResumeData || !!sanitizedMasterData,
+      triggerFit,
     });
   } catch (error) {
     console.error('Resume chat error:', error);

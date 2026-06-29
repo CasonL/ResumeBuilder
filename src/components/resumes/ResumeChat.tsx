@@ -12,7 +12,7 @@ interface Message {
 
 interface ResumeChatProps {
   resumeId: string;
-  onApplyChanges?: (data: any, masterData?: any) => void;
+  onApplyChanges?: (data: any, masterData?: any, triggerFit?: boolean) => void;
   estimatedHeightPx?: number;
   targetLength?: string;
 }
@@ -27,6 +27,7 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [pendingChange, setPendingChange] = useState<any>(null);
   const [pendingMasterChange, setPendingMasterChange] = useState<any>(null);
+  const [pendingFitTrigger, setPendingFitTrigger] = useState(false);
   const [messageLimit, setMessageLimit] = useState(BASE_LIMIT);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -103,6 +104,7 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
       if (result.modifiedResumeData) {
         setPendingChange(result.modifiedResumeData);
         setPendingMasterChange(result.modifiedMasterData || null);
+        setPendingFitTrigger(result.triggerFit === true);
       }
     } catch (error) {
       setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` }]);
@@ -119,9 +121,10 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
 
   const handleApply = () => {
     if (pendingChange && onApplyChanges) {
-      onApplyChanges(pendingChange, pendingMasterChange || undefined);
+      onApplyChanges(pendingChange, pendingMasterChange || undefined, pendingFitTrigger);
       setPendingChange(null);
       setPendingMasterChange(null);
+      setPendingFitTrigger(false);
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Changes applied to the resume. Click Save Changes to persist them.' },
