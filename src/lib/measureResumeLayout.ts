@@ -28,23 +28,27 @@ export interface LayoutReport {
 // Print-mode metrics (font: 11.5px, line-height: 1.35)
 const LINE_PX = 11.5 * 1.35;   // ~15.5px per line of body text
 const CHARS_PER_LINE = 90;      // characters per line at content width
-const PAGE_H = 812;             // 8.67in × 96dpi (832px) minus 20px safety buffer
+const PAGE_H = 792;             // 8.67in × 96dpi (832px) minus 40px safety buffer
 const MIN_H  = 680;             // minimum acceptable height — resume must look full
 
 // Fixed-height building blocks (derived from actual globals.css values)
-// h2: 13px × 1.35 line-height ≈ 17.6px text + 6px padding-bottom + 12px margin-bottom = 35px
-// role-head <b>: font-size 15px × 1.35 ≈ 20px + 6px margin-bottom (--resume-rolehead-gap) = 26px
-// skill pill: 12px font + 5px×2 padding = 22px; category label ~18px + 8px margin-top on grid
-const H_HEADER       = 82;  // name (30px→36px) + tagline (13px) + contact (12px) + border/gap
-const H_SUMMARY      = 10;  // top margin before summary text
-const H_SECTION_H2   = 35;  // h2: text 17.6px + padding-bottom 6px + margin-bottom 12px ≈ 35px
-const H_SECTION_GAP  = 14;  // margin-bottom of section containers at print
-const H_ROLE_HEAD    = 28;  // 15px bold text (~20px line) + 6px margin + 2px extra
-const H_ROLE_GAP     = 10;  // gap between roles within a section
-const H_BULLET_PAD   = 5;   // top margin per bullet li
-const H_EDUCATION    = 36;  // degree + focus line
-const H_SKILL_CAT    = 46;  // category label (~18px) + 8px margin + one row of pills (22px)
-const H_CERT_ENTRY   = 36;  // cert entry (often wraps to 2 lines)
+const H_HEADER       = 82;
+const H_SUMMARY      = 10;
+const H_SECTION_H2   = 35;
+const H_SECTION_GAP  = 14;
+const H_ROLE_HEAD    = 28;
+const H_ROLE_GAP     = 10;
+const H_BULLET_PAD   = 5;
+const H_EDUCATION    = 36;
+// Skills: label ~26px + rows of pills (28px/row). Pill width ≈ text.length×7 + 26px. Content width ≈ 580px.
+const H_SKILL_LABEL  = 26;  // category label + margin
+const H_SKILL_ROW    = 28;  // one row of pills
+const SKILL_CONTENT_W = 580; // usable width for pill layout
+const PILL_CHAR_W    = 7;   // px per character in a pill
+const PILL_PAD       = 26;  // fixed padding per pill
+// Certifications: use character count like bullets
+const CERT_CHARS_PER_LINE = 85; // slightly narrower than bullets due to font size
+const H_CERT_PAD     = 8;   // top padding per cert entry
 
 function lines(text: string): number {
   return Math.ceil(text.length / CHARS_PER_LINE);
@@ -99,10 +103,25 @@ export function estimateResumeHeight(resumeData: any, masterData: any): number {
     const normalized = typeof resumeData.selectedSkills[0] === 'string'
       ? [{ category: 'Skills', items: resumeData.selectedSkills }]
       : resumeData.selectedSkills;
-    h += H_SECTION_H2 + normalized.length * H_SKILL_CAT + H_SECTION_GAP;
+    let sh = H_SECTION_H2;
+    normalized.forEach((cat: any) => {
+      const items: string[] = cat.items || [];
+      let rowW = 0; let rows = 1;
+      items.forEach((item: string) => {
+        const pillW = item.length * PILL_CHAR_W + PILL_PAD;
+        if (rowW + pillW > SKILL_CONTENT_W && rowW > 0) { rows++; rowW = pillW; } else { rowW += pillW + 6; }
+      });
+      sh += H_SKILL_LABEL + rows * H_SKILL_ROW;
+    });
+    h += sh + H_SECTION_GAP;
   }
   if (!hide('certifications') && masterData?.certifications?.length) {
-    h += H_SECTION_H2 + masterData.certifications.length * H_CERT_ENTRY + H_SECTION_GAP;
+    let ch = H_SECTION_H2;
+    masterData.certifications.forEach((cert: any) => {
+      const text = [cert.name, cert.details].filter(Boolean).join(', ');
+      ch += Math.ceil(text.length / CERT_CHARS_PER_LINE) * LINE_PX + H_CERT_PAD;
+    });
+    h += ch + H_SECTION_GAP;
   }
   return Math.round(h);
 }
@@ -171,12 +190,27 @@ export async function measureResumeLayout(
     const normalized = typeof resumeData.selectedSkills[0] === 'string'
       ? [{ category: 'Skills', items: resumeData.selectedSkills }]
       : resumeData.selectedSkills;
-    h += H_SECTION_H2 + normalized.length * H_SKILL_CAT + H_SECTION_GAP;
+    let sh = H_SECTION_H2;
+    normalized.forEach((cat: any) => {
+      const items: string[] = cat.items || [];
+      let rowW = 0; let rows = 1;
+      items.forEach((item: string) => {
+        const pillW = item.length * PILL_CHAR_W + PILL_PAD;
+        if (rowW + pillW > SKILL_CONTENT_W && rowW > 0) { rows++; rowW = pillW; } else { rowW += pillW + 6; }
+      });
+      sh += H_SKILL_LABEL + rows * H_SKILL_ROW;
+    });
+    h += sh + H_SECTION_GAP;
   }
 
   // Certifications
   if (!hide('certifications') && masterData?.certifications?.length) {
-    h += H_SECTION_H2 + masterData.certifications.length * H_CERT_ENTRY + H_SECTION_GAP;
+    let ch = H_SECTION_H2;
+    masterData.certifications.forEach((cert: any) => {
+      const text = [cert.name, cert.details].filter(Boolean).join(', ');
+      ch += Math.ceil(text.length / CERT_CHARS_PER_LINE) * LINE_PX + H_CERT_PAD;
+    });
+    h += ch + H_SECTION_GAP;
   }
 
   // Build role list for AI
