@@ -196,11 +196,19 @@ Check the JD for these hard filters and compare against the candidate's profile:
 For each hard filter:
 - If the candidate MEETS it → no barrier.
 - If the candidate does NOT meet it but the JD has an ASTERISK ("equivalent experience considered", "or equivalent", "may substitute") → list it as a barrier but note the asterisk path.
-- If the candidate does NOT meet it and there is NO asterisk → list it as a HARD BARRIER. Hard barriers that are common auto-filters (wrong location for in-person roles, missing required degree) must reduce the score by 2–4 points each. They are not separate from the score — they are real odds-killers.
-- If the role is fully remote or location is only a "preference", do not treat location as a hard barrier.
-- If the role says "in-person" / "on-site" / "in-office" and the candidate is in a different city/state/country, this is a HARD BARRIER.
+- If the candidate does NOT meet it and there is NO asterisk → list it as a HARD BARRIER.
 
-Output practical barriers as a structured field. The honestTake must explicitly state what the candidate is missing and the realistic odds given those barriers.
+HARD BARRIER SCORING RULE (apply exactly):
+1. First, compute the competency score using STEP 4.
+2. Then apply hard barrier penalties:
+   - One hard barrier for a common auto-filter (wrong location for in-person, missing required degree) → cap the score at 6. Reduce by 2–4 points depending on how absolute the barrier is.
+   - Two or more hard barriers → cap the score at 4. Reduce by 3–5 points total.
+   - A hard barrier for an in-person role in a specific city when the candidate is not in that region is treated as a near-automatic filter. The score should NOT be 7 or above.
+3. If the hard barrier is the single most important thing the candidate is missing, list it as the biggestGap. Do not default to a secondary skill gap when a hard barrier is present.
+4. If the role is fully remote or location is only a "preference", do not treat location as a hard barrier.
+5. If the role says "in-person" / "on-site" / "in-office" / "hybrid" with required days and the candidate is in a different city/state/country, this is a HARD BARRIER.
+
+Output practical barriers as a structured field. The honestTake must explicitly state what the candidate is missing, the penalty applied to the score, and the realistic odds given those barriers.
 
 JOB DESCRIPTION:
 ${jobDescription.slice(0, 2000)}
