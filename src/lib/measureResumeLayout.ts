@@ -29,17 +29,20 @@ const LINE_PX = 11.5 * 1.35;   // ~15.5px per line of body text
 const CHARS_PER_LINE = 90;      // characters per line at content width
 const PAGE_H = 832;             // 8.67in × 96dpi usable content
 
-// Fixed-height building blocks (measured from print preview)
-const H_HEADER       = 74;  // name + tagline + contact bar
-const H_SUMMARY      = 10;  // summary top margin
-const H_SECTION_H2   = 20;  // "EXPERIENCE" / "SKILLS" heading
-const H_SECTION_GAP  = 14;  // gap between major sections
-const H_ROLE_HEAD    = 20;  // role title + company + dates row
+// Fixed-height building blocks (derived from actual globals.css values)
+// h2: 13px × 1.35 line-height ≈ 17.6px text + 6px padding-bottom + 12px margin-bottom = 35px
+// role-head <b>: font-size 15px × 1.35 ≈ 20px + 6px margin-bottom (--resume-rolehead-gap) = 26px
+// skill pill: 12px font + 5px×2 padding = 22px; category label ~18px + 8px margin-top on grid
+const H_HEADER       = 82;  // name (30px→36px) + tagline (13px) + contact (12px) + border/gap
+const H_SUMMARY      = 10;  // top margin before summary text
+const H_SECTION_H2   = 35;  // h2: text 17.6px + padding-bottom 6px + margin-bottom 12px ≈ 35px
+const H_SECTION_GAP  = 14;  // margin-bottom of section containers at print
+const H_ROLE_HEAD    = 28;  // 15px bold text (~20px line) + 6px margin + 2px extra
 const H_ROLE_GAP     = 10;  // gap between roles within a section
-const H_BULLET_PAD   = 4;   // top margin per bullet li
-const H_EDUCATION    = 32;  // education block (degree + focus)
-const H_SKILL_CAT    = 28;  // one skill category label + items row
-const H_CERT_ENTRY   = 28;  // one certification entry
+const H_BULLET_PAD   = 5;   // top margin per bullet li
+const H_EDUCATION    = 36;  // degree + focus line
+const H_SKILL_CAT    = 46;  // category label (~18px) + 8px margin + one row of pills (22px)
+const H_CERT_ENTRY   = 36;  // cert entry (often wraps to 2 lines)
 
 function lines(text: string): number {
   return Math.ceil(text.length / CHARS_PER_LINE);
