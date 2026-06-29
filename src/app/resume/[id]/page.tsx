@@ -228,9 +228,38 @@ export default function ResumePage({ params }: PageProps) {
       });
       const result = await res.json();
       if (result.changes?.length) {
-        setRefinementStatus(`applying ${result.changes.length} cut(s)…`);
+        setRefinementStatus(`Pass 1: applying ${result.changes.length} cut(s)…`);
         const updated = applyFitChanges(rData, mData, result.changes);
         setGeneratedResumeData((prev: any) => ({ ...prev, data: updated }));
+
+        // Pass 2 — re-measure in memory (pure calc, no DOM needed)
+        const { measureResumeLayout: measure2 } = await import('@/lib/measureResumeLayout');
+        const report2 = await measure2(el, updated, mData);
+        if (report2.overflowPx > 0) {
+          setRefinementStatus(`Pass 2: ${report2.overflowPx}px over — asking AI…`);
+          const res2 = await fetch('/api/refine-resume-vision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              layoutReport: report2,
+              targetLength,
+              jobDescription: generatedResumeData.jobDescription,
+              strongestThread: updated.fitAssessment?.strongestThread,
+              sections: {
+                hasCertifications: !!(mData?.certifications?.length),
+                hasSkills: !!(updated.selectedSkills?.length),
+                hasProjects: !!(updated.selectedProjects?.length),
+              },
+            }),
+          });
+          const result2 = await res2.json();
+          if (result2.changes?.length) {
+            setRefinementStatus(`Pass 2: applying ${result2.changes.length} cut(s)…`);
+            const updated2 = applyFitChanges(updated, mData, result2.changes);
+            setGeneratedResumeData((prev: any) => ({ ...prev, data: updated2 }));
+          }
+        }
       } else {
         setRefinementStatus('already fits ✔');
         await new Promise((r) => setTimeout(r, 1500));
