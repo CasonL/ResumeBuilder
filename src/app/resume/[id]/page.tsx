@@ -351,15 +351,6 @@ export default function ResumePage({ params }: PageProps) {
             <>
               {!isEditing ? (
                 <>
-                  <button
-                    className="edit-btn"
-                    onClick={() => handleFitToPage('1-page')}
-                    disabled={isRefining}
-                    title="Use AI vision to trim content to 1 page"
-                    style={{ background: 'rgba(37,99,235,0.15)', borderColor: 'rgba(37,99,235,0.4)', color: '#93c5fd' }}
-                  >
-                    📐 Fit to 1 Page
-                  </button>
                   <button className="edit-btn" onClick={() => {
                     setIsEditing(true);
                     const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
