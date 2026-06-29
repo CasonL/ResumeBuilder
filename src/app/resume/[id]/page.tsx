@@ -207,6 +207,43 @@ export default function ResumePage({ params }: PageProps) {
     }
   };
 
+  const handleFitToPage = async (targetLength: '1-page' | '2-page' = '1-page') => {
+    const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
+    if (!el || isRefining || !generatedResumeData) return;
+    try {
+      const { captureResumeWithBoundary } = await import('@/lib/captureResumeImage');
+      setIsRefining(true);
+      setRefinementStatus('scanning page fit…');
+      const targetPages = targetLength === '1-page' ? 1 : 2;
+      const screenshot = await captureResumeWithBoundary(el, targetPages);
+      setRefinementStatus('asking AI to review…');
+      const res = await fetch('/api/refine-resume-vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          screenshot,
+          resumeData: generatedResumeData.data,
+          masterData: generatedResumeData.masterData,
+          targetLength,
+          jobDescription: generatedResumeData.jobDescription,
+        }),
+      });
+      const result = await res.json();
+      if (result.revisedData) {
+        setRefinementStatus(`applying ${result.cutsMade?.length ?? 0} cut(s)…`);
+        setGeneratedResumeData((prev: any) => ({ ...prev, data: result.revisedData }));
+      } else {
+        setRefinementStatus('already fits!');
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+    } catch (e) {
+      console.error('Fit to page failed:', e);
+    } finally {
+      setIsRefining(false);
+      setRefinementStatus('');
+    }
+  };
+
   const handleApplyChanges = (modifiedData: any, modifiedMasterData?: any) => {
     const baseData = modifiedData || generatedResumeData?.data;
     const baseMaster = modifiedMasterData || generatedResumeData?.masterData;
@@ -252,6 +289,15 @@ export default function ResumePage({ params }: PageProps) {
             <>
               {!isEditing ? (
                 <>
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleFitToPage('1-page')}
+                    disabled={isRefining}
+                    title="Use AI vision to trim content to 1 page"
+                    style={{ background: 'rgba(37,99,235,0.15)', borderColor: 'rgba(37,99,235,0.4)', color: '#93c5fd' }}
+                  >
+                    📐 Fit to 1 Page
+                  </button>
                   <button className="edit-btn" onClick={() => {
                     setIsEditing(true);
                     const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
