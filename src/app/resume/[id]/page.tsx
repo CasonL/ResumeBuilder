@@ -384,7 +384,12 @@ export default function ResumePage({ params }: PageProps) {
     }, 50);
   };
 
-  const handlePrint = () => setShowPrintDialog(true);
+  const handlePrint = () => {
+    const rData = (isEditing && editedData) ? editedData : generatedResumeData?.data;
+    const mData = (isEditing && editedMasterData) ? editedMasterData : generatedResumeData?.masterData;
+    const height = rData && mData ? estimateResumeHeight(rData, mData) : 9999;
+    if (height <= 792) { doPrint(); } else { setShowPrintDialog(true); }
+  };
 
   return (
     <div className="resume-viewer" data-editing={isEditing}>
