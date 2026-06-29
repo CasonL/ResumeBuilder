@@ -116,17 +116,17 @@ export default function ResumePage({ params }: PageProps) {
       const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
       if (!el) return;
       try {
-        const { captureResumeWithBoundary } = await import('@/lib/captureResumeImage');
+        const { measureResumeLayout } = await import('@/lib/measureResumeLayout');
         setIsRefining(true);
-        setRefinementStatus(`Pass ${pass}: scanning page fit…`);
-        const targetPages = targetLength === '1-page' ? 1 : 2;
-        const screenshot = await captureResumeWithBoundary(el, targetPages);
-        setRefinementStatus(`Pass ${pass}: asking AI to review…`);
+        setRefinementStatus(`Pass ${pass}: measuring layout…`);
+        const layoutReport = await measureResumeLayout(el, generatedResumeData.data, generatedResumeData.masterData);
+        if (layoutReport.overflowPx <= 0) { setIsRefining(false); setRefinementStatus(''); return; }
+        setRefinementStatus(`Pass ${pass}: ${layoutReport.overflowPx}px over — asking AI…`);
         const res = await fetch('/api/refine-resume-vision', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            screenshot,
+            layoutReport,
             resumeData: generatedResumeData.data,
             masterData: generatedResumeData.masterData,
             targetLength,
@@ -211,17 +211,21 @@ export default function ResumePage({ params }: PageProps) {
     const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
     if (!el || isRefining || !generatedResumeData) return;
     try {
-      const { captureResumeWithBoundary } = await import('@/lib/captureResumeImage');
+      const { measureResumeLayout } = await import('@/lib/measureResumeLayout');
       setIsRefining(true);
-      setRefinementStatus('scanning page fit…');
-      const targetPages = targetLength === '1-page' ? 1 : 2;
-      const screenshot = await captureResumeWithBoundary(el, targetPages);
-      setRefinementStatus('asking AI to review…');
+      setRefinementStatus('measuring layout…');
+      const layoutReport = await measureResumeLayout(el, generatedResumeData.data, generatedResumeData.masterData);
+      if (layoutReport.overflowPx <= 0) {
+        setRefinementStatus('already fits!');
+        await new Promise((r) => setTimeout(r, 1200));
+        setIsRefining(false); setRefinementStatus(''); return;
+      }
+      setRefinementStatus(`${layoutReport.overflowPx}px over — asking AI…`);
       const res = await fetch('/api/refine-resume-vision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          screenshot,
+          layoutReport,
           resumeData: generatedResumeData.data,
           masterData: generatedResumeData.masterData,
           targetLength,
