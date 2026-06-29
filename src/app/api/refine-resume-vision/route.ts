@@ -72,7 +72,8 @@ STRONGEST THREAD (never cut): ${strongestThread || 'not specified'}
 JOB DESCRIPTION (first 500 chars):
 ${(jobDescription || '').substring(0, 500)}
 
-SECTIONS PRESENT: ${JSON.stringify(sections)}
+CURRENTLY VISIBLE SECTIONS (only suggest hide_section for sections where visible=true):
+${JSON.stringify(sections, null, 2)}
 
 ROLES AND BULLETS (with pixel heights and line counts):
 ${JSON.stringify(layoutReport.roles, null, 2)}

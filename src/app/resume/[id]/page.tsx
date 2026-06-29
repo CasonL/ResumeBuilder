@@ -192,6 +192,15 @@ export default function ResumePage({ params }: PageProps) {
     };
   };
 
+  const buildSections = (data: any, masterData: any) => {
+    const hidden: string[] = data.customizations?.hiddenSections || [];
+    return {
+      certifications: { visible: !hidden.includes('certifications') && !!(masterData?.certifications?.length), count: masterData?.certifications?.length || 0 },
+      skills:         { visible: !hidden.includes('skills')         && !!(data.selectedSkills?.length),          categories: (data.selectedSkills || []).length },
+      projects:       { visible: !hidden.includes('projects')       && !!(data.selectedProjects?.length),        count: (data.selectedProjects || []).length },
+    };
+  };
+
   const handleFitToPage = async (targetLength: '1-page' | '2-page' = '1-page') => {
     const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
     if (!el || isRefining || !generatedResumeData) return;
@@ -219,11 +228,7 @@ export default function ResumePage({ params }: PageProps) {
           targetLength,
           jobDescription: generatedResumeData.jobDescription,
           strongestThread: rData.fitAssessment?.strongestThread,
-          sections: {
-            hasCertifications: !!(mData?.certifications?.length),
-            hasSkills: !!(rData.selectedSkills?.length),
-            hasProjects: !!(rData.selectedProjects?.length),
-          },
+          sections: buildSections(rData, mData),
         }),
       });
       const result = await res.json();
@@ -257,11 +262,7 @@ export default function ResumePage({ params }: PageProps) {
               targetLength,
               jobDescription: generatedResumeData.jobDescription,
               strongestThread: updated.fitAssessment?.strongestThread,
-              sections: {
-                hasCertifications: !!(mData?.certifications?.length),
-                hasSkills: !!(updated.selectedSkills?.length),
-                hasProjects: !!(updated.selectedProjects?.length),
-              },
+              sections: buildSections(updated, mData),
             }),
           });
           const result2 = await res2.json();
