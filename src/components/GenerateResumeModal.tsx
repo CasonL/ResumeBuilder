@@ -6,7 +6,9 @@ interface GenerateResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (jobDescription: string, preferences: ResumePreferences) => void;
+  onSaveFitCard?: (fitAssessment: any, jobDescription: string) => void;
   masterData?: any;
+  initialJobDescription?: string;
 }
 
 interface ResumePreferences {
@@ -30,9 +32,9 @@ interface JobRecommendations {
   };
 }
 
-export default function GenerateResumeModal({ isOpen, onClose, onGenerate, masterData }: GenerateResumeModalProps) {
+export default function GenerateResumeModal({ isOpen, onClose, onGenerate, onSaveFitCard, masterData, initialJobDescription }: GenerateResumeModalProps) {
   const [step, setStep] = useState(1);
-  const [jobDescription, setJobDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState(initialJobDescription || '');
   const [preferences, setPreferences] = useState<ResumePreferences>({
     targetLength: '1-page',
     layoutStyle: 'balanced-columns',
@@ -46,6 +48,7 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [contentWarning, setContentWarning] = useState<string | null>(null);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
 
   // Validate profile data for minimum requirements
   const profileValidation = useMemo(() => {
@@ -150,22 +153,36 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
     }
   };
 
+  const doClose = () => {
+    setStep(1);
+    setJobDescription(initialJobDescription || '');
+    setRecommendations(null);
+    setFitAssessment(null);
+    setShowDetails(false);
+    setShowSavePrompt(false);
+    setPreferences({
+      targetLength: '1-page',
+      layoutStyle: 'balanced-columns',
+      prioritySections: [],
+      tone: 'professional',
+      includeAchievements: true,
+    });
+    onClose();
+  };
+
   const handleClose = () => {
     if (!isGenerating && !isAnalyzing) {
-      setStep(1);
-      setJobDescription('');
-      setRecommendations(null);
-      setFitAssessment(null);
-      setShowDetails(false);
-      setPreferences({
-        targetLength: '1-page',
-        layoutStyle: 'balanced-columns',
-        prioritySections: [],
-        tone: 'professional',
-        includeAchievements: true,
-      });
-      onClose();
+      if (fitAssessment && onSaveFitCard && !showSavePrompt) {
+        setShowSavePrompt(true);
+        return;
+      }
+      doClose();
     }
+  };
+
+  const handleSaveAndClose = () => {
+    if (onSaveFitCard && fitAssessment) onSaveFitCard(fitAssessment, jobDescription);
+    doClose();
   };
 
   const togglePrioritySection = (section: string) => {
@@ -606,6 +623,31 @@ export default function GenerateResumeModal({ isOpen, onClose, onGenerate, maste
               </div>
             )}
           </div>
+        {showSavePrompt && (
+          <div style={{
+            margin: '0 -24px -24px',
+            padding: '14px 20px',
+            background: 'rgba(180,83,9,0.08)',
+            borderTop: '1px solid rgba(180,83,9,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+          }}>
+            <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>
+              💾 Save this fit assessment to your dashboard?
+            </span>
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button type="button" onClick={doClose} style={{ fontSize: '13px', padding: '6px 14px', background: 'none', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer', color: 'var(--muted)' }}>
+                Skip
+              </button>
+              <button type="button" onClick={handleSaveAndClose} style={{ fontSize: '13px', padding: '6px 14px', background: 'var(--accent)', border: 'none', borderRadius: '6px', cursor: 'pointer', color: 'white', fontWeight: 600 }}>
+                Save & Close
+              </button>
+            </div>
+          </div>
+        )}
         </form>
       </div>
     </div>

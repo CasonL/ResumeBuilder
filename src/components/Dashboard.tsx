@@ -20,6 +20,8 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [masterData, setMasterData] = useState<any>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [savedFitCards, setSavedFitCards] = useState<any[]>([]);
+  const [fitCardJD, setFitCardJD] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   // Validate profile data for minimum requirements
@@ -81,10 +83,38 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json();
         setMasterData(data);
+        setSavedFitCards(data.savedFitCards || []);
       }
     } catch (error) {
       console.error('Error fetching master data:', error);
     }
+  };
+
+  const handleSaveFitCard = async (fitAssessment: any, jobDescription: string) => {
+    const card = {
+      id: `fit-${Date.now()}`,
+      savedAt: new Date().toISOString(),
+      jobDescription,
+      preview: jobDescription.trim().split('\n')[0].slice(0, 80),
+      fitAssessment,
+    };
+    const updated = [card, ...savedFitCards];
+    setSavedFitCards(updated);
+    await fetch('/api/profile/patch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ savedFitCards: updated }),
+    });
+  };
+
+  const handleDeleteFitCard = async (id: string) => {
+    const updated = savedFitCards.filter((c: any) => c.id !== id);
+    setSavedFitCards(updated);
+    await fetch('/api/profile/patch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ savedFitCards: updated }),
+    });
   };
 
   const fetchResumes = async () => {
@@ -272,11 +302,19 @@ export default function Dashboard() {
       </header>
 
       <div className="resume-grid">
+        {savedFitCards.map((card: any) => (
+          <FitAssessmentCard
+            key={card.id}
+            card={card}
+            onDelete={() => handleDeleteFitCard(card.id)}
+            onEdit={() => { setFitCardJD(card.jobDescription); setIsModalOpen(true); }}
+          />
+        ))}
         {resumes.map((resume) => (
           <ResumeCard key={resume.id} resume={resume} onDelete={handleDelete} />
         ))}
         <AddResumeCard 
-          onClick={() => setIsModalOpen(true)} 
+          onClick={() => { setFitCardJD(undefined); setIsModalOpen(true); }} 
           disabled={!profileValidation.isValid || (credits === 0 && !isAdmin)}
           onDisabledClick={() => {
             if (credits === 0 && !isAdmin) {
@@ -291,15 +329,63 @@ export default function Dashboard() {
 
       <GenerateResumeModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setFitCardJD(undefined); }}
         onGenerate={handleGenerate}
+        onSaveFitCard={handleSaveFitCard}
         masterData={masterData}
+        initialJobDescription={fitCardJD}
       />
 
       <BuyCreditsModal
         isOpen={isBuyCreditsOpen}
         onClose={() => setIsBuyCreditsOpen(false)}
       />
+    </div>
+  );
+}
+
+function FitAssessmentCard({ card, onDelete, onEdit }: { card: any; onDelete: () => void; onEdit: () => void }) {
+  const score = Number(card.fitAssessment?.score ?? 0);
+  const borderColor = score >= 7 ? '#16a34a' : score >= 5 ? '#b45309' : '#b91c1c';
+  const scoreColor = score >= 7 ? '#15803d' : score >= 5 ? '#92400e' : '#991b1b';
+  const bgColor = score >= 7 ? 'rgba(22,163,74,0.06)' : score >= 5 ? 'rgba(180,83,9,0.06)' : 'rgba(185,28,28,0.06)';
+  const label = score >= 7 ? 'Strong Fit' : score >= 5 ? 'Transferable' : 'Long Shot';
+  const date = new Date(card.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+  return (
+    <div className="resume-card" style={{ background: bgColor, border: `1.5px solid ${borderColor}`, position: 'relative', overflow: 'visible' }}>
+      <button
+        onClick={onEdit}
+        title="Re-open with this job description"
+        style={{
+          position: 'absolute', top: '-10px', right: '-10px',
+          width: '28px', height: '28px', borderRadius: '50%',
+          background: '#f59e0b', border: '2px solid white',
+          cursor: 'pointer', fontSize: '13px', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.18)', zIndex: 2,
+        }}
+      >
+        ✏️
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <span style={{ fontSize: '22px', fontWeight: 800, color: scoreColor }}>{score}/10</span>
+        <span style={{ fontSize: '10px', fontWeight: 700, color: scoreColor, textTransform: 'uppercase', letterSpacing: '0.07em', background: `${borderColor}22`, padding: '2px 7px', borderRadius: '999px' }}>{label}</span>
+        <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--muted)' }}>{date}</span>
+      </div>
+      <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '0 0 6px', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+        {card.preview}
+      </p>
+      {card.fitAssessment?.strongestThread && (
+        <p style={{ fontSize: '12px', color: scoreColor, margin: '0 0 4px', lineHeight: 1.4 }}>
+          ✓ {card.fitAssessment.strongestThread}
+        </p>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+        <button onClick={onDelete} style={{ fontSize: '11px', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}>
+          Remove
+        </button>
+      </div>
     </div>
   );
 }
