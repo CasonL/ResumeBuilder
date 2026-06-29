@@ -99,7 +99,7 @@ RULES:
 IMPORTANT: When the user's intent is clear (they ask you to do something, or they say "yes" / "please" / "do it"), make the change immediately. Do NOT ask "Want me to do that?" or "Shall I proceed?" before generating the JSON — just do it. The Apply Changes button gives the user full control. Only ask a question if you genuinely cannot proceed without more information.
 
 When you make a change, respond in two parts:
-1. A brief explanation of what you changed and why.
+1. A 1–3 sentence explanation of what you changed and why. No bullet lists, no paragraph summaries — be terse. The JSON speaks for itself.
 2. A JSON code block (inside triple backticks with language "json") containing the COMPLETE modified data under the keys "modifiedResumeData" and, if applicable, "modifiedMasterData".
 
 If you are not changing the resume, do not include the JSON block.
@@ -138,7 +138,7 @@ PROACTIVE REVIEW:
 
     const response = await anthropic.messages.create({
       model,
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: systemPrompt,
       messages: chatMessages,
     });
