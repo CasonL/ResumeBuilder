@@ -4,37 +4,40 @@ import { getCurrentUser } from '@/lib/auth-helpers';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const SYSTEM_PROMPT = `You are a precision resume editor. You receive exact pixel measurements of a rendered resume at print font size, and the resume JSON.
+const SYSTEM_PROMPT = `You are a precision resume editor. You receive a layout report with exact pixel overflow.
+Your job: return ONLY a minimal list of changes to eliminate the overflow. Do NOT return the full resume JSON.
 
-Your job: make the minimum surgical cuts so the resume fits within the target page height.
+Each line of body text = ~16px. Each bullet removal saves: estimatedLines × 16px.
+Hiding certifications saves ~80px. Hiding skills saves ~100px. Removing an experience saves 80–180px.
 
-SCORING (do this first for every bullet):
-- Relevance score 1 (low): bullet does not directly demonstrate a job competency
-- Relevance score 2 (medium): supporting context but not core proof
-- Relevance score 3 (high): directly proves a must-have job competency or the strongestThread
+SCORING each bullet:
+- Score 1 (low): does not directly prove a job competency
+- Score 2 (medium): supporting context
+- Score 3 (high): directly proves a must-have competency or the strongestThread
 
-CUT ORDER — exhaust each step before moving to the next. Stop the moment overflow is resolved:
-
-STEP 1 — Score 1 + estimatedLines ≥ 2: REMOVE entirely.
-STEP 2 — Score 1 + estimatedLines = 1: REMOVE entirely.
-STEP 3 — Score 2 + estimatedLines ≥ 2: one rewrite to tighten below 92 chars. If still ≥92 chars, REMOVE. No second attempt.
-STEP 4 — Score 3 + estimatedLines ≥ 2: shorten ONLY IF core mechanism AND any metric/number are fully preserved. If not possible, SKIP.
-STEP 5 — Hide entire low-signal sections via hiddenSections: 'certifications' first, then 'projects'. Never 'experience' or 'leadership'.
-STEP 6 — Last resort: remove single least-relevant ID from selectedExperiences.
+CUT ORDER — stop the moment overflow is eliminated:
+STEP 1 — Score 1, estimatedLines ≥ 2: remove_bullet
+STEP 2 — Score 1, estimatedLines = 1: remove_bullet
+STEP 3 — Score 2, estimatedLines ≥ 2: rewrite_bullet (must be <90 chars; if not possible, remove_bullet)
+STEP 4 — Score 3, estimatedLines ≥ 2: rewrite_bullet only if metric AND mechanism preserved; else skip
+STEP 5 — hide_section: "certifications" first, then "skills"
+STEP 6 — remove_experience: single least-relevant role
 
 HARD RULES:
-- STOP cutting the moment overflow is resolved. Never over-trim.
-- Never reduce any role below 2 bullets. Skip that role, move to next step.
-- Never touch bullets that prove the strongestThread.
-- Never remove a metric (number, %, $, ratio) from a Score 3 bullet.
-- If overflowPx = 0, return action: "ok" with no changes.
+- Never reduce a role below 2 bullets (skip that role, go to next step)
+- Never touch bullets proving the strongestThread
+- Never remove a metric from a Score 3 bullet
+- Return action "ok" with empty changes[] if overflowPx = 0
 
-Return valid JSON:
+Return ONLY this JSON (no other fields):
 {
   "action": "ok" | "trimmed",
-  "overflowPx": number,
-  "cutsMade": ["brief description of each change"],
-  "revisedData": { ...complete resume JSON... } | null
+  "changes": [
+    {"type": "remove_bullet",   "roleId": "<id>", "bulletIndex": <0-based int>},
+    {"type": "rewrite_bullet",  "roleId": "<id>", "bulletIndex": <0-based int>, "newText": "<string>"},
+    {"type": "hide_section",    "section": "<certifications|skills|projects>"},
+    {"type": "remove_experience","roleId": "<id>"}
+  ]
 }`;
 
 export async function POST(request: NextRequest) {
@@ -42,26 +45,15 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
-    const { layoutReport, resumeData, masterData, targetLength, jobDescription } = await request.json();
+    const { layoutReport, targetLength, jobDescription, strongestThread, sections } = await request.json();
 
-    if (!layoutReport || !resumeData) {
-      return NextResponse.json({ error: 'Missing layoutReport or resumeData' }, { status: 400 });
+    if (!layoutReport) {
+      return NextResponse.json({ error: 'Missing layoutReport' }, { status: 400 });
     }
 
     if (layoutReport.overflowPx <= 0) {
-      return NextResponse.json({ action: 'ok', overflowPx: 0, cutsMade: [], revisedData: null });
+      return NextResponse.json({ action: 'ok', changes: [] });
     }
-
-    const selectedIds = new Set([
-      ...(resumeData.selectedExperiences || []),
-      ...(resumeData.selectedLeadership || []),
-      ...(resumeData.selectedProjects || []),
-    ]);
-    const slimMaster = masterData ? {
-      experiences: (masterData.experiences || []).filter((e: any) => selectedIds.has(e.id)),
-      leadership: (masterData.leadership || []).filter((e: any) => selectedIds.has(e.id)),
-      certifications: masterData.certifications,
-    } : null;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -69,32 +61,24 @@ export async function POST(request: NextRequest) {
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Target: ${targetLength} (page content height = ${layoutReport.pageHeightPx}px).
+          content: `Target: ${targetLength}.
+Overflow to eliminate: ${layoutReport.overflowPx}px out of ${layoutReport.totalHeightPx}px total.
 
-LAYOUT MEASUREMENT:
-- Rendered height: ${layoutReport.totalHeightPx}px
-- Page limit: ${layoutReport.pageHeightPx}px  
-- Overflow: ${layoutReport.overflowPx}px (must eliminate this many pixels)
+STRONGEST THREAD (never cut): ${strongestThread || 'not specified'}
 
-ROLES WITH BULLET MEASUREMENTS:
+JOB DESCRIPTION (first 500 chars):
+${(jobDescription || '').substring(0, 500)}
+
+SECTIONS PRESENT: ${JSON.stringify(sections)}
+
+ROLES AND BULLETS (with pixel heights and line counts):
 ${JSON.stringify(layoutReport.roles, null, 2)}
 
-STRONGEST THREAD (never cut): ${resumeData.fitAssessment?.strongestThread || 'not specified'}
-
-JOB DESCRIPTION:
-${(jobDescription || '').substring(0, 600)}
-
-RESUME JSON:
-${JSON.stringify(resumeData)}
-
-MASTER DATA (selected items only):
-${JSON.stringify(slimMaster)}
-
-Apply the cut order. Eliminate ${layoutReport.overflowPx}px of content. Return complete revised resumeData.`,
+Return only the changes JSON.`,
         },
       ],
       response_format: { type: 'json_object' },
-      max_tokens: 8000,
+      max_tokens: 800,
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');

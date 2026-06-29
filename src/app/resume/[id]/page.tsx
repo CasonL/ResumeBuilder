@@ -29,7 +29,6 @@ export default function ResumePage({ params }: PageProps) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const [isRefining, setIsRefining] = useState(false);
   const [refinementStatus, setRefinementStatus] = useState('');
-  const refinedRef = useRef(false);
   const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
@@ -106,53 +105,6 @@ export default function ResumePage({ params }: PageProps) {
     }
   }, [layoutMode]);
 
-  useEffect(() => {
-    if (!generatedResumeData || refinedRef.current) return;
-    const targetLength = generatedResumeData.preferences?.targetLength as '1-page' | '2-page' | undefined;
-    if (!targetLength || id === 'innovates' || id === 'td-bank') return;
-    refinedRef.current = true;
-
-    const runRefinement = async (pass: number) => {
-      const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
-      if (!el) return;
-      try {
-        const { measureResumeLayout } = await import('@/lib/measureResumeLayout');
-        setIsRefining(true);
-        setRefinementStatus(`Pass ${pass}: measuring layout…`);
-        const layoutReport = await measureResumeLayout(el, generatedResumeData.data, generatedResumeData.masterData);
-        if (layoutReport.overflowPx <= 0) { setIsRefining(false); setRefinementStatus(''); return; }
-        setRefinementStatus(`Pass ${pass}: ${layoutReport.overflowPx}px over — asking AI…`);
-        const res = await fetch('/api/refine-resume-vision', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            layoutReport,
-            resumeData: generatedResumeData.data,
-            masterData: generatedResumeData.masterData,
-            targetLength,
-            jobDescription: generatedResumeData.jobDescription,
-          }),
-        });
-        const result = await res.json();
-        if (result.action !== 'ok' && result.revisedData) {
-          setRefinementStatus(`Pass ${pass}: applying ${result.cutsMade?.length ?? 0} cut(s)…`);
-          setGeneratedResumeData((prev: any) => ({ ...prev, data: result.revisedData }));
-          if (pass < 2) {
-            await new Promise((r) => setTimeout(r, 500));
-            await runRefinement(pass + 1);
-          }
-        }
-      } catch (e) {
-        console.error('Vision refinement failed:', e);
-      } finally {
-        setIsRefining(false);
-        setRefinementStatus('');
-      }
-    };
-
-    setTimeout(() => runRefinement(1), 800);
-  }, [generatedResumeData?.name, id]);
-
   if (isLoading) {
     return (
       <div className="resume-viewer">
@@ -207,42 +159,91 @@ export default function ResumePage({ params }: PageProps) {
     }
   };
 
+  const applyFitChanges = (data: any, masterData: any, changes: any[]): any => {
+    const bulletAdj = { ...(data.customizations?.bulletPointAdjustments || {}) };
+    const hidden = [...(data.customizations?.hiddenSections || [])];
+    let selectedExp = [...(data.selectedExperiences || [])];
+    let selectedLead = [...(data.selectedLeadership || [])];
+    const allItems = [...(masterData?.experiences || []), ...(masterData?.leadership || [])];
+
+    for (const change of changes) {
+      if (change.type === 'remove_bullet') {
+        const { roleId, bulletIndex } = change;
+        const item = allItems.find((x: any) => x.id === roleId);
+        const bullets: string[] = bulletAdj[roleId] || item?.bullets || [];
+        bulletAdj[roleId] = bullets.filter((_: string, i: number) => i !== bulletIndex);
+      } else if (change.type === 'rewrite_bullet') {
+        const { roleId, bulletIndex, newText } = change;
+        const item = allItems.find((x: any) => x.id === roleId);
+        const bullets: string[] = bulletAdj[roleId] || item?.bullets || [];
+        bulletAdj[roleId] = bullets.map((b: string, i: number) => i === bulletIndex ? newText : b);
+      } else if (change.type === 'hide_section') {
+        if (!hidden.includes(change.section)) hidden.push(change.section);
+      } else if (change.type === 'remove_experience') {
+        selectedExp = selectedExp.filter((id: string) => id !== change.roleId);
+        selectedLead = selectedLead.filter((id: string) => id !== change.roleId);
+      }
+    }
+    return {
+      ...data,
+      selectedExperiences: selectedExp,
+      selectedLeadership: selectedLead,
+      customizations: { ...data.customizations, bulletPointAdjustments: bulletAdj, hiddenSections: hidden },
+    };
+  };
+
   const handleFitToPage = async (targetLength: '1-page' | '2-page' = '1-page') => {
     const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
     if (!el || isRefining || !generatedResumeData) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
     try {
       const { measureResumeLayout } = await import('@/lib/measureResumeLayout');
       setIsRefining(true);
       setRefinementStatus('measuring layout…');
-      const layoutReport = await measureResumeLayout(el, generatedResumeData.data, generatedResumeData.masterData);
+      const rData = generatedResumeData.data;
+      const mData = generatedResumeData.masterData;
+      const layoutReport = await measureResumeLayout(el, rData, mData);
       if (layoutReport.overflowPx <= 0) {
-        setRefinementStatus('already fits!');
-        await new Promise((r) => setTimeout(r, 1200));
-        setIsRefining(false); setRefinementStatus(''); return;
+        setRefinementStatus('already fits ✔');
+        await new Promise((r) => setTimeout(r, 1500));
+        return;
       }
       setRefinementStatus(`${layoutReport.overflowPx}px over — asking AI…`);
       const res = await fetch('/api/refine-resume-vision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           layoutReport,
-          resumeData: generatedResumeData.data,
-          masterData: generatedResumeData.masterData,
           targetLength,
           jobDescription: generatedResumeData.jobDescription,
+          strongestThread: rData.fitAssessment?.strongestThread,
+          sections: {
+            hasCertifications: !!(mData?.certifications?.length),
+            hasSkills: !!(rData.selectedSkills?.length),
+            hasProjects: !!(rData.selectedProjects?.length),
+          },
         }),
       });
       const result = await res.json();
-      if (result.revisedData) {
-        setRefinementStatus(`applying ${result.cutsMade?.length ?? 0} cut(s)…`);
-        setGeneratedResumeData((prev: any) => ({ ...prev, data: result.revisedData }));
+      if (result.changes?.length) {
+        setRefinementStatus(`applying ${result.changes.length} cut(s)…`);
+        const updated = applyFitChanges(rData, mData, result.changes);
+        setGeneratedResumeData((prev: any) => ({ ...prev, data: updated }));
       } else {
-        setRefinementStatus('already fits!');
-        await new Promise((r) => setTimeout(r, 1200));
+        setRefinementStatus('already fits ✔');
+        await new Promise((r) => setTimeout(r, 1500));
       }
-    } catch (e) {
-      console.error('Fit to page failed:', e);
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        setRefinementStatus('timed out — try again');
+        await new Promise((r) => setTimeout(r, 2000));
+      } else {
+        console.error('Fit to page failed:', e);
+      }
     } finally {
+      clearTimeout(timeout);
       setIsRefining(false);
       setRefinementStatus('');
     }
