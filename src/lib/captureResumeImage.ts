@@ -26,7 +26,7 @@ export async function captureResumeWithBoundary(
 
   // --- Capture ---
   const canvas = await html2canvas(resumeEl, {
-    scale: 1.5,
+    scale: 1,
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
@@ -46,8 +46,8 @@ export async function captureResumeWithBoundary(
   // --- Draw page boundary line(s) ---
   // Print content area: (11in - 2x1in @page margin - 0.08in - 0.25in) * 96dpi * scale
   // = 8.67in * 96 * 1.5 = 1249px at 1.5x capture scale
-  const PRINT_PAD_TOP_PX = Math.round(0.08 * 96 * 1.5);
-  const CONTENT_PER_PAGE_PX = Math.round(8.67 * 96 * 1.5);
+  const PRINT_PAD_TOP_PX = Math.round(0.08 * 96 * 1);
+  const CONTENT_PER_PAGE_PX = Math.round(8.67 * 96 * 1);
 
   const ctx = canvas.getContext('2d')!;
 

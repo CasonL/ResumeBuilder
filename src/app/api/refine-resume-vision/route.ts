@@ -58,6 +58,21 @@ export async function POST(request: NextRequest) {
 
     const targetPages = targetLength === '1-page' ? 1 : 2;
 
+    // Slim masterData: only send selected items to reduce token count
+    const selectedIds = new Set([
+      ...(resumeData.selectedExperiences || []),
+      ...(resumeData.selectedLeadership || []),
+      ...(resumeData.selectedProjects || []),
+    ]);
+    const slimMaster = masterData ? {
+      personalInfo: masterData.personalInfo,
+      education: masterData.education,
+      experiences: (masterData.experiences || []).filter((e: any) => selectedIds.has(e.id)),
+      leadership: (masterData.leadership || []).filter((e: any) => selectedIds.has(e.id)),
+      projects: (masterData.projects || []).filter((e: any) => selectedIds.has(e.id)),
+      certifications: masterData.certifications,
+    } : null;
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -73,18 +88,18 @@ export async function POST(request: NextRequest) {
               type: 'text',
               text: `Target: exactly ${targetPages} page(s).
 
-The dashed red line in the screenshot marks the exact bottom of the usable content area for page ${targetPages}. Any content below that line is overflow that must be eliminated.
+The dashed red line marks the exact bottom of usable content for page ${targetPages}. Any content below = overflow to eliminate.
 
 STRONGEST THREAD (never cut): ${resumeData.fitAssessment?.strongestThread || 'not specified'}
 
 JOB DESCRIPTION:
-${jobDescription || 'not provided'}
+${(jobDescription || '').substring(0, 800)}
 
 RESUME JSON:
-${JSON.stringify(resumeData, null, 2)}
+${JSON.stringify(resumeData)}
 
-MASTER DATA (for context on what exists):
-${JSON.stringify(masterData, null, 2)}
+MASTER DATA (selected items only):
+${JSON.stringify(slimMaster)}
 
 Apply the cut order. Return the complete revised resumeData JSON with all fields preserved.`,
             },
@@ -92,7 +107,7 @@ Apply the cut order. Return the complete revised resumeData JSON with all fields
         },
       ],
       response_format: { type: 'json_object' },
-      max_tokens: 4000,
+      max_tokens: 8000,
     });
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
