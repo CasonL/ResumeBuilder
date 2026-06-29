@@ -530,7 +530,15 @@ export default function ResumePage({ params }: PageProps) {
       </div>
 
       {generatedResumeData && id !== 'innovates' && id !== 'td-bank' && (
-        <ResumeChat resumeId={id} onApplyChanges={handleApplyChanges} />
+        <ResumeChat
+          resumeId={id}
+          onApplyChanges={handleApplyChanges}
+          estimatedHeightPx={estimateResumeHeight(
+            generatedResumeData.data,
+            generatedResumeData.masterData
+          )}
+          targetLength={generatedResumeData.preferences?.targetLength}
+        />
       )}
 
       <style jsx>{`

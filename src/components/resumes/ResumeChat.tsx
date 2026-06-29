@@ -13,9 +13,11 @@ interface Message {
 interface ResumeChatProps {
   resumeId: string;
   onApplyChanges?: (data: any, masterData?: any) => void;
+  estimatedHeightPx?: number;
+  targetLength?: string;
 }
 
-export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps) {
+export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx, targetLength }: ResumeChatProps) {
   const BASE_LIMIT = 5;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +86,8 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
         body: JSON.stringify({
           message,
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          estimatedHeightPx,
+          targetLength,
         }),
       });
 

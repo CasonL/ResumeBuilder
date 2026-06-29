@@ -30,7 +30,7 @@ export async function POST(
       );
     }
 
-    const { message, messages = [] } = await request.json();
+    const { message, messages = [], estimatedHeightPx, targetLength } = await request.json();
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
         { error: 'Message is required' },
@@ -111,7 +111,12 @@ CANDIDATE MASTER PROFILE:
 ${JSON.stringify(masterData, null, 2)}
 
 JOB DESCRIPTION:
-${jobDescription}`;
+${jobDescription}
+
+RESUME LENGTH CONTEXT:
+- Target: ${targetLength || resume.preferences?.targetLength || 'not specified'}
+- Estimated current height: ${estimatedHeightPx ? `${estimatedHeightPx}px (page limit ~812px${estimatedHeightPx > 812 ? ` — currently ${estimatedHeightPx - 812}px OVER` : ` — ${812 - estimatedHeightPx}px remaining`})` : 'unknown'}
+- If the resume is over the page limit and the user asks to shorten it, trim weaker bullets rather than removing whole sections.`;
 
     const chatMessages: Anthropic.MessageParam[] = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
