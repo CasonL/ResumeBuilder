@@ -1340,6 +1340,12 @@ aside h2:not(:first-of-type) {
   }
 
   .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Roles are long enough to span pages — allow it, but keep heading attached to first bullet */
+  .role {
     break-inside: auto;
     page-break-inside: auto;
   }

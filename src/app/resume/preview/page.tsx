@@ -461,7 +461,7 @@ export default function ResumePreviewPage() {
                       <section>
                         <h2>Skills</h2>
                         {normalizedSkills.map((skillCat: any, i: number) => (
-                          <div key={i} style={{ marginBottom: '12px' }}>
+                          <div key={i} className="avoid-break" style={{ marginBottom: '12px' }}>
                             <p style={{ fontWeight: 600, fontSize: '12px', marginBottom: '4px' }}>{skillCat.category}</p>
                             <p className="small" style={{ margin: 0 }}>{skillCat.items.join(', ')}</p>
                           </div>
@@ -474,7 +474,7 @@ export default function ResumePreviewPage() {
                     <section>
                       <h2>Certifications</h2>
                       {masterData.certifications.map((cert: any, i: number) => (
-                        <div key={i}>
+                        <div key={i} className="avoid-break">
                           <p><b>{cert.name}</b></p>
                           {cert.details && <p className="small">{cert.details}</p>}
                         </div>
