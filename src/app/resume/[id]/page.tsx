@@ -31,6 +31,7 @@ export default function ResumePage({ params }: PageProps) {
   const [isRefining, setIsRefining] = useState(false);
   const [refinementStatus, setRefinementStatus] = useState('');
   const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle'|'saving'|'saved'>('idle');
   const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
@@ -64,6 +65,39 @@ export default function ResumePage({ params }: PageProps) {
     };
     loadGeneratedResume();
   }, [id]);
+
+  // Auto-save while in edit mode
+  useEffect(() => {
+    if (!isEditing || !editedData) return;
+    setSaveStatus('idle');
+    const t = setTimeout(async () => {
+      setSaveStatus('saving');
+      try {
+        const resumeRes = await fetch(`/api/resumes/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: editedData }),
+        });
+        if (!resumeRes.ok) throw new Error('save failed');
+        if (editedMasterData) {
+          await fetch('/api/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editedMasterData),
+          });
+        }
+        setGeneratedResumeData((prev: any) => ({
+          ...prev,
+          data: editedData,
+          masterData: editedMasterData || prev.masterData,
+        }));
+        setSaveStatus('saved');
+      } catch {
+        setSaveStatus('idle');
+      }
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [editedData, editedMasterData, isEditing, id]);
 
   useEffect(() => {
     const titleElement = document.querySelector('title');
@@ -343,41 +377,30 @@ export default function ResumePage({ params }: PageProps) {
           {generatedResumeData && (
             <>
               {!isEditing ? (
-                <>
-                  <button className="edit-btn" onClick={() => {
-                    setIsEditing(true);
-                    const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
-                    const cleanedData = {
-                      ...generatedResumeData.data,
-                      customizations: {
-                        ...generatedResumeData.data.customizations,
-                        bulletPointAdjustments: {},
-                        roleAdjustments: {}
-                      }
-                    };
-                    setEditedData(cleanedData);
-                    setEditedMasterData(mergedMaster);
-                  }}>
-                    ✏️ Edit Resume
-                  </button>
-                  <button className="print-btn" onClick={handlePrint}>
-                    🖨️ Print Resume
-                  </button>
-                </>
+                <button className="edit-btn" onClick={() => {
+                  setIsEditing(true);
+                  setSaveStatus('idle');
+                  const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
+                  const cleanedData = {
+                    ...generatedResumeData.data,
+                    customizations: { ...generatedResumeData.data.customizations, bulletPointAdjustments: {}, roleAdjustments: {} }
+                  };
+                  setEditedData(cleanedData);
+                  setEditedMasterData(mergedMaster);
+                }}>
+                  ✏️ Edit Resume
+                </button>
               ) : (
                 <>
-                  <button className="save-btn" onClick={handleSave}>
-                    💾 Save Changes
-                  </button>
+                  <span style={{ fontSize: 12, color: saveStatus === 'saved' ? '#4ade80' : saveStatus === 'saving' ? '#93c5fd' : '#6b7280', marginRight: 4 }}>
+                    {saveStatus === 'saving' ? 'saving…' : saveStatus === 'saved' ? '✓ saved' : ''}
+                  </span>
                   <button className="undo-btn" onClick={() => {
+                    setSaveStatus('idle');
                     const mergedMaster = mergeCustomizationsIntoMaster(generatedResumeData.data, generatedResumeData.masterData);
                     const cleanedData = {
                       ...generatedResumeData.data,
-                      customizations: {
-                        ...generatedResumeData.data.customizations,
-                        bulletPointAdjustments: {},
-                        roleAdjustments: {}
-                      }
+                      customizations: { ...generatedResumeData.data.customizations, bulletPointAdjustments: {}, roleAdjustments: {} }
                     };
                     setEditedData(cleanedData);
                     setEditedMasterData(mergedMaster);
@@ -388,11 +411,15 @@ export default function ResumePage({ params }: PageProps) {
                     setIsEditing(false);
                     setEditedData(null);
                     setEditedMasterData(null);
+                    setSaveStatus('idle');
                   }}>
-                    Cancel
+                    Done
                   </button>
                 </>
               )}
+              <button className="print-btn" onClick={handlePrint}>
+                🖨️ Print Resume
+              </button>
             </>
           )}
         </div>
