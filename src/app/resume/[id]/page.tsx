@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { mergeCustomizationsIntoMaster } from '@/lib/resume-editor-helpers';
@@ -27,6 +27,10 @@ export default function ResumePage({ params }: PageProps) {
   const [editedData, setEditedData] = useState<any>(null);
   const [editedMasterData, setEditedMasterData] = useState<any>(null);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
+  const [isRefining, setIsRefining] = useState(false);
+  const [refinementStatus, setRefinementStatus] = useState('');
+  const refinedRef = useRef(false);
+  const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
     if (generatedResumeData?.data?.resumeName) return generatedResumeData.data.resumeName;
@@ -101,6 +105,53 @@ export default function ResumePage({ params }: PageProps) {
       // ignore
     }
   }, [layoutMode]);
+
+  useEffect(() => {
+    if (!generatedResumeData || refinedRef.current) return;
+    const targetLength = generatedResumeData.preferences?.targetLength as '1-page' | '2-page' | undefined;
+    if (!targetLength || id === 'innovates' || id === 'td-bank') return;
+    refinedRef.current = true;
+
+    const runRefinement = async (pass: number) => {
+      const el = resumeContainerRef.current?.querySelector('.resume') as HTMLElement | null;
+      if (!el) return;
+      try {
+        const { captureResumeWithBoundary } = await import('@/lib/captureResumeImage');
+        setIsRefining(true);
+        setRefinementStatus(`Pass ${pass}: scanning page fit…`);
+        const targetPages = targetLength === '1-page' ? 1 : 2;
+        const screenshot = await captureResumeWithBoundary(el, targetPages);
+        setRefinementStatus(`Pass ${pass}: asking AI to review…`);
+        const res = await fetch('/api/refine-resume-vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            screenshot,
+            resumeData: generatedResumeData.data,
+            masterData: generatedResumeData.masterData,
+            targetLength,
+            jobDescription: generatedResumeData.jobDescription,
+          }),
+        });
+        const result = await res.json();
+        if (result.action !== 'ok' && result.revisedData) {
+          setRefinementStatus(`Pass ${pass}: applying ${result.cutsMade?.length ?? 0} cut(s)…`);
+          setGeneratedResumeData((prev: any) => ({ ...prev, data: result.revisedData }));
+          if (pass < 2) {
+            await new Promise((r) => setTimeout(r, 500));
+            await runRefinement(pass + 1);
+          }
+        }
+      } catch (e) {
+        console.error('Vision refinement failed:', e);
+      } finally {
+        setIsRefining(false);
+        setRefinementStatus('');
+      }
+    };
+
+    setTimeout(() => runRefinement(1), 800);
+  }, [generatedResumeData?.name, id]);
 
   if (isLoading) {
     return (
@@ -280,8 +331,14 @@ export default function ResumePage({ params }: PageProps) {
       </div>
 
       <div className={`resume-layout ${isEditing ? 'editing' : ''}`}>
+        {isRefining && (
+          <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(15,15,25,0.92)', backdropFilter: 'blur(6px)', color: '#93c5fd', fontSize: '13px', fontWeight: 600, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid rgba(147,197,253,0.2)' }}>
+            <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid #93c5fd', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+            ✦ Fitting to page: {refinementStatus}
+          </div>
+        )}
         <div className="page">
-          <div className="resume-mode-wrap" data-layout={layoutMode}>
+          <div className="resume-mode-wrap" data-layout={layoutMode} ref={resumeContainerRef}>
             <div className="print-only-metadata" style={{ display: 'none' }} data-resume-title={getPrintTitle()}>
               {getPrintTitle()}
             </div>
