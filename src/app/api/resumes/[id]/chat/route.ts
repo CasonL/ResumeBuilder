@@ -70,6 +70,9 @@ export async function POST(
 
     const jobDescription = resume.job_description || '';
 
+    // Strip personalContext before sending to AI — it contains private notes/preferences
+    const masterDataForAI = masterData ? { ...masterData, personalContext: undefined } : null;
+
     const systemPrompt = `You are a senior resume editor and career strategist. You have full context: the candidate's master profile, the tailored resume generated for a job, and the job description.
 
 Your job is to answer questions, give advice, and edit the resume when asked.
@@ -108,7 +111,7 @@ CURRENT GENERATED RESUME DATA:
 ${JSON.stringify(resumeData, null, 2)}
 
 CANDIDATE MASTER PROFILE:
-${JSON.stringify(masterData, null, 2)}
+${JSON.stringify(masterDataForAI, null, 2)}
 
 JOB DESCRIPTION:
 ${jobDescription}
@@ -167,7 +170,7 @@ PROACTIVE REVIEW:
       ? sanitizeCompanyName(modifiedResumeData, companyName)
       : null;
     const sanitizedMasterData = modifiedMasterData
-      ? sanitizeCompanyName(modifiedMasterData, companyName)
+      ? { ...sanitizeCompanyName(modifiedMasterData, companyName), personalContext: masterData?.personalContext }
       : null;
 
     return NextResponse.json({
