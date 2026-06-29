@@ -285,7 +285,7 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
           >
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
             {msg.hasChanges && onApplyChanges && (
-              <div style={{ marginTop: '8px' }}>
+              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <button
                   onClick={handleApply}
                   style={{
@@ -301,6 +301,11 @@ export default function ResumeChat({ resumeId, onApplyChanges }: ResumeChatProps
                 >
                   Apply Changes
                 </button>
+                {pendingMasterChange && (
+                  <span style={{ fontSize: '11px', color: '#9ca3af', lineHeight: 1.4 }}>
+                    ✦ Also updates your master profile
+                  </span>
+                )}
               </div>
             )}
           </div>
