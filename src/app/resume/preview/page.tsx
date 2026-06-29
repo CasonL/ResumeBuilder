@@ -222,6 +222,14 @@ export default function ResumePreviewPage() {
                     <p style={{ fontSize: '12px', margin: 0, color: '#b91c1c' }}>
                       <strong>✗ Biggest gap:</strong> {data.fitAssessment.biggestGap}
                     </p>
+                    {data.fitAssessment.practicalBarriers?.length > 0 && (
+                      <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(185,28,28,0.08)', borderRadius: '6px', borderLeft: '3px solid #b91c1c' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 700, color: '#b91c1c', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>⚠ Hard Barriers</p>
+                        {data.fitAssessment.practicalBarriers.map((b: string, i: number) => (
+                          <p key={i} style={{ fontSize: '12px', margin: '2px 0', color: '#7f1d1d', lineHeight: 1.5 }}>• {b}</p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
