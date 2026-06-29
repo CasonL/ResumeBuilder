@@ -20,6 +20,7 @@ export interface RoleMeasurement {
 export interface LayoutReport {
   totalHeightPx: number;
   pageHeightPx: number;
+  minHeightPx: number;
   overflowPx: number;
   roles: RoleMeasurement[];
 }
@@ -27,7 +28,8 @@ export interface LayoutReport {
 // Print-mode metrics (font: 11.5px, line-height: 1.35)
 const LINE_PX = 11.5 * 1.35;   // ~15.5px per line of body text
 const CHARS_PER_LINE = 90;      // characters per line at content width
-const PAGE_H = 792;             // 8.67in × 96dpi (832px) minus 40px safety buffer
+const PAGE_H = 812;             // 8.67in × 96dpi (832px) minus 20px safety buffer
+const MIN_H  = 680;             // minimum acceptable height — resume must look full
 
 // Fixed-height building blocks (derived from actual globals.css values)
 // h2: 13px × 1.35 line-height ≈ 17.6px text + 6px padding-bottom + 12px margin-bottom = 35px
@@ -152,6 +154,7 @@ export async function measureResumeLayout(
   return {
     totalHeightPx: Math.round(h),
     pageHeightPx: PAGE_H,
+    minHeightPx: MIN_H,
     overflowPx: Math.max(0, Math.round(h - PAGE_H)),
     roles,
   };

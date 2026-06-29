@@ -24,10 +24,13 @@ STEP 5 — hide_section: "certifications" first, then "skills"
 STEP 6 — remove_experience: single least-relevant role
 
 HARD RULES:
+- STOP the moment overflow is eliminated. Do NOT keep cutting after that.
+- After each planned cut, mentally subtract its pixel savings from overflowPx. Stop when you reach 0.
 - Never reduce a role below 2 bullets (skip that role, go to next step)
 - Never touch bullets proving the strongestThread
 - Never remove a metric from a Score 3 bullet
 - Return action "ok" with empty changes[] if overflowPx = 0
+- The resume must remain at least minHeightPx tall after all cuts — if a cut would take it below that, SKIP it
 
 Return ONLY this JSON (no other fields):
 {
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
         {
           role: 'user',
           content: `Target: ${targetLength}.
-Overflow to eliminate: ${layoutReport.overflowPx}px out of ${layoutReport.totalHeightPx}px total.
+Overflow to eliminate: ${layoutReport.overflowPx}px (total: ${layoutReport.totalHeightPx}px, limit: ${layoutReport.pageHeightPx}px, minimum: ${layoutReport.minHeightPx}px).
 
 STRONGEST THREAD (never cut): ${strongestThread || 'not specified'}
 
