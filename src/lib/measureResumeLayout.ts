@@ -54,6 +54,59 @@ function bulletH(text: string): number {
   return lines(text) * LINE_PX + H_BULLET_PAD;
 }
 
+/** Fast synchronous height estimate — used to verify changes don't over-trim */
+export function estimateResumeHeight(resumeData: any, masterData: any): number {
+  const hidden: string[] = resumeData.customizations?.hiddenSections || [];
+  const hide = (s: string) => hidden.includes(s);
+  let h = H_HEADER;
+  const summary = resumeData.customizations?.summary ?? masterData?.personalInfo?.summary;
+  if (summary && !hide('summary')) h += H_SUMMARY + lines(summary) * LINE_PX + H_SECTION_GAP;
+  if (!hide('education') && masterData?.education?.length) h += H_SECTION_H2 + H_EDUCATION + H_SECTION_GAP;
+
+  const buildH = (ids: string[], pool: any[], key: string) => {
+    if (hide(key) || !ids?.length) return 0;
+    let sh = H_SECTION_H2;
+    ids.forEach((id: string, idx: number) => {
+      const item = pool.find((x: any) => x.id === id);
+      if (!item) return;
+      const bullets: string[] = resumeData.customizations?.bulletPointAdjustments?.[id] || item.bullets || [];
+      sh += H_ROLE_HEAD;
+      bullets.forEach((b: string) => { sh += bulletH(b); });
+      if (idx < ids.length - 1) sh += H_ROLE_GAP;
+    });
+    return sh + H_SECTION_GAP;
+  };
+
+  const allExp = masterData?.experiences || [];
+  const allLead = masterData?.leadership || [];
+  h += buildH(resumeData.selectedExperiences, allExp, 'experience');
+  h += buildH(resumeData.selectedLeadership, allLead, 'leadership');
+
+  if (!hide('projects') && resumeData.selectedProjects?.length) {
+    const proj = masterData?.projects || [];
+    const resolved = resumeData.selectedProjects.filter((id: string) => proj.find((p: any) => p.id === id));
+    if (resolved.length) {
+      h += H_SECTION_H2 + H_SECTION_GAP;
+      resolved.forEach((id: string) => {
+        const p = proj.find((x: any) => x.id === id);
+        const bullets = resumeData.customizations?.bulletPointAdjustments?.[id] || p?.bullets || [];
+        h += H_ROLE_HEAD;
+        bullets.forEach((b: string) => { h += bulletH(b); });
+      });
+    }
+  }
+  if (!hide('skills') && resumeData.selectedSkills?.length) {
+    const normalized = typeof resumeData.selectedSkills[0] === 'string'
+      ? [{ category: 'Skills', items: resumeData.selectedSkills }]
+      : resumeData.selectedSkills;
+    h += H_SECTION_H2 + normalized.length * H_SKILL_CAT + H_SECTION_GAP;
+  }
+  if (!hide('certifications') && masterData?.certifications?.length) {
+    h += H_SECTION_H2 + masterData.certifications.length * H_CERT_ENTRY + H_SECTION_GAP;
+  }
+  return Math.round(h);
+}
+
 export async function measureResumeLayout(
   _el: HTMLElement,
   resumeData: any,

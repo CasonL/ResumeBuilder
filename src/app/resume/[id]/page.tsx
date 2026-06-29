@@ -228,8 +228,19 @@ export default function ResumePage({ params }: PageProps) {
       });
       const result = await res.json();
       if (result.changes?.length) {
-        setRefinementStatus(`Pass 1: applying ${result.changes.length} cut(s)…`);
-        const updated = applyFitChanges(rData, mData, result.changes);
+        // Apply changes one-by-one, stopping if any would drop below minHeightPx
+        const { estimateResumeHeight } = await import('@/lib/measureResumeLayout');
+        let current = rData;
+        let applied = 0;
+        for (const change of result.changes) {
+          const candidate = applyFitChanges(current, mData, [change]);
+          if (estimateResumeHeight(candidate, mData) >= layoutReport.minHeightPx) {
+            current = candidate;
+            applied++;
+          }
+        }
+        setRefinementStatus(`Pass 1: applying ${applied} cut(s)…`);
+        const updated = current;
         setGeneratedResumeData((prev: any) => ({ ...prev, data: updated }));
 
         // Pass 2 — re-measure in memory (pure calc, no DOM needed)
@@ -255,9 +266,17 @@ export default function ResumePage({ params }: PageProps) {
           });
           const result2 = await res2.json();
           if (result2.changes?.length) {
-            setRefinementStatus(`Pass 2: applying ${result2.changes.length} cut(s)…`);
-            const updated2 = applyFitChanges(updated, mData, result2.changes);
-            setGeneratedResumeData((prev: any) => ({ ...prev, data: updated2 }));
+            let current2 = updated;
+            let applied2 = 0;
+            for (const change of result2.changes) {
+              const candidate2 = applyFitChanges(current2, mData, [change]);
+              if (estimateResumeHeight(candidate2, mData) >= report2.minHeightPx) {
+                current2 = candidate2;
+                applied2++;
+              }
+            }
+            setRefinementStatus(`Pass 2: applying ${applied2} cut(s)…`);
+            setGeneratedResumeData((prev: any) => ({ ...prev, data: current2 }));
           }
         }
       } else {
