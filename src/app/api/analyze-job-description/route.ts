@@ -186,8 +186,21 @@ STEP 4 — SCORE:
 - Covering secondary skills does NOT raise the score if core gaps exist.
 - Covering almost everything except one secondary skill should NOT drop the score below 7.
 
-STEP 5 — FLAG PRACTICAL BARRIERS:
-If the JD requires a specific location, license, certification, or degree and the candidate doesn't have it, note it clearly in the honestTake as a practical barrier. Do not use it to change the score — it's separate from competency fit.
+STEP 5 — FLAG PRACTICAL BARRIERS (mandatory):
+Check the JD for these hard filters and compare against the candidate's profile:
+- LOCATION: Does the JD require a specific metro area, city, state, or country? Does it say "in-office", "on-site", "in-person", "hybrid" with required days, or "must be located in"?
+- DEGREE: Does it require a specific degree (BS, MS, PhD) or field of study (CS, Engineering, MBA, Nursing, etc.)? Does it say "required" or "must have"?
+- LICENSE/CERTIFICATION: Does it require an active license, certification, or clearance?
+- WORK AUTHORIZATION: Does it require specific visa, citizenship, or security clearance?
+
+For each hard filter:
+- If the candidate MEETS it → no barrier.
+- If the candidate does NOT meet it but the JD has an ASTERISK ("equivalent experience considered", "or equivalent", "may substitute") → list it as a barrier but note the asterisk path.
+- If the candidate does NOT meet it and there is NO asterisk → list it as a HARD BARRIER. Hard barriers that are common auto-filters (wrong location for in-person roles, missing required degree) must reduce the score by 2–4 points each. They are not separate from the score — they are real odds-killers.
+- If the role is fully remote or location is only a "preference", do not treat location as a hard barrier.
+- If the role says "in-person" / "on-site" / "in-office" and the candidate is in a different city/state/country, this is a HARD BARRIER.
+
+Output practical barriers as a structured field. The honestTake must explicitly state what the candidate is missing and the realistic odds given those barriers.
 
 JOB DESCRIPTION:
 ${jobDescription.slice(0, 2000)}
@@ -197,10 +210,11 @@ ${JSON.stringify(profile)}
 
 Return JSON only:
 {
-  "score": <integer 1–10>,
+  "score": <integer 1–10 — apply all core competency and hard barrier rules>,
   "strongestThread": "<one sentence: the single most relevant thing they have actually done — specific, not generic>",
-  "biggestGap": "<one sentence: the most critical competency the role requires that the candidate has no direct evidence for — or 'No critical gaps identified' if core competencies are covered>",
-  "honestTake": "<2-3 sentences: direct hiring-manager read — what genuinely works, what's actually missing, any practical barriers, realistic odds>"
+  "biggestGap": "<one sentence: the most critical competency or hard requirement the job requires that the candidate has zero direct evidence for — or 'No critical gaps identified' if core competencies are covered>",
+  "practicalBarriers": ["list each hard barrier with a brief note, or empty array if none"],
+  "honestTake": "<2-3 sentences: direct hiring-manager read — what's genuinely strong, what's actually missing, any hard barriers, realistic odds. Do not omit barriers.>"
 }`;
 
       try {
