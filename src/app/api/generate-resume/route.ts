@@ -78,6 +78,13 @@ export async function POST(request: NextRequest) {
 
     // Decrypt profile data
     const masterData = decryptData(profileRecord.encrypted_data, encryptionKey);
+    // Normalize websiteUrl from Import Website into personalInfo.website if available
+    if (masterData.websiteUrl && !masterData.personalInfo?.website) {
+      masterData.personalInfo = {
+        ...masterData.personalInfo,
+        website: masterData.websiteUrl,
+      };
+    }
     const personalContext = [
       masterData.personalContext,
       masterData.websiteContext ? `PORTFOLIO/WEBSITE CONTEXT:\n${masterData.websiteContext}` : '',

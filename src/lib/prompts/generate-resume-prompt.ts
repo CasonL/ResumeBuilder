@@ -166,6 +166,7 @@ Good (asterisk evidence foregrounded):
 STEP 4 - GENERATE HEADER, SUMMARY, AND EDUCATION FOCUS
 These go inside customizations. They must match the target role, not default to the candidate's product identity.
 
+- Include the candidate's website/portfolio URL in the resume header if one exists in personalInfo.website or websiteUrl. Use the cleanest URL available.
 - customizations.headerTitle: 3-5 pipe-separated keywords in the job's language. Examples:
   - HR/ops role: "Operations | People Coordination | Systems"
   - Sales role: "Sales | Pipeline | Client Relationships"

@@ -286,6 +286,9 @@ export default function ResumePreviewPage() {
                 <div className="contact">
                   <p><b>{masterData.personalInfo.location}</b> • {masterData.personalInfo.email}</p>
                   <p>{masterData.personalInfo.phone} • {masterData.personalInfo.linkedin}</p>
+                  {masterData.personalInfo?.website && (
+                    <p>{masterData.personalInfo.website}</p>
+                  )}
                 </div>
               </header>
 

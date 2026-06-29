@@ -424,6 +424,15 @@ export default function ProfileEditor({ data, onChange }: { data: any; onChange:
               onChange={(e) => updateField('personalInfo', 'linkedin', e.target.value)}
             />
           </div>
+          <div className="form-group">
+            <label>Website / Portfolio</label>
+            <input
+              type="text"
+              value={data.personalInfo?.website || data.websiteUrl || ''}
+              onChange={(e) => updateField('personalInfo', 'website', e.target.value)}
+              placeholder="URL from Import Website or custom"
+            />
+          </div>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
               <label style={{ marginBottom: 0 }}>Professional Thesis</label>
