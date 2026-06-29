@@ -28,6 +28,7 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
   const [pendingChange, setPendingChange] = useState<any>(null);
   const [pendingMasterChange, setPendingMasterChange] = useState<any>(null);
   const [pendingFitTrigger, setPendingFitTrigger] = useState(false);
+  const [appliedMsgIdx, setAppliedMsgIdx] = useState<number | null>(null);
   const [messageLimit, setMessageLimit] = useState(BASE_LIMIT);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -125,10 +126,11 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
       setPendingChange(null);
       setPendingMasterChange(null);
       setPendingFitTrigger(false);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Changes applied to the resume. Click Save Changes to persist them.' },
-      ]);
+      setMessages((prev) => {
+        const idx = prev.length - 1;
+        setAppliedMsgIdx(idx);
+        return prev;
+      });
     }
   };
 
@@ -296,18 +298,20 @@ export default function ResumeChat({ resumeId, onApplyChanges, estimatedHeightPx
               <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <button
                   onClick={handleApply}
+                  disabled={appliedMsgIdx === index}
                   style={{
                     padding: '6px 10px',
                     borderRadius: '6px',
-                    background: '#8b5e3c',
+                    background: appliedMsgIdx === index ? '#16a34a' : '#8b5e3c',
                     color: '#fff',
                     border: 'none',
                     fontSize: '12px',
                     fontWeight: 600,
-                    cursor: 'pointer',
+                    cursor: appliedMsgIdx === index ? 'default' : 'pointer',
+                    transition: 'background 0.2s',
                   }}
                 >
-                  Apply Changes
+                  {appliedMsgIdx === index ? '✓ Applied!' : 'Apply Changes'}
                 </button>
                 {pendingMasterChange && (
                   <span style={{ fontSize: '11px', color: '#9ca3af', lineHeight: 1.4 }}>
