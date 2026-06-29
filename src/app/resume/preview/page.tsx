@@ -52,6 +52,48 @@ export default function ResumePreviewPage() {
   }, [layoutMode]);
 
   useEffect(() => {
+    if (!generatedData || refinedRef.current || !generatedData.preferences?.targetLength) return;
+    const { data: resumeData, masterData: mData, preferences: prefs, jobDescription: jd } = generatedData;
+    const targetLength = prefs.targetLength as '1-page' | '2-page';
+    refinedRef.current = true;
+
+    const runRefinement = async (pass: number) => {
+      const el = resumeElRef.current?.querySelector('.resume.show') as HTMLElement | null;
+      if (!el) return;
+      try {
+        setIsRefining(true);
+        setRefinementStatus(`Pass ${pass}: scanning page fit…`);
+        const targetPages = targetLength === '1-page' ? 1 : 2;
+        const screenshot = await captureResumeWithBoundary(el, targetPages);
+        setRefinementStatus(`Pass ${pass}: asking AI to review…`);
+        const res = await fetch('/api/refine-resume-vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ screenshot, resumeData, masterData: mData, targetLength, jobDescription: jd }),
+        });
+        const result = await res.json();
+        if (result.action !== 'ok' && result.revisedData) {
+          setRefinementStatus(`Pass ${pass}: applying ${result.cutsMade?.length ?? 0} cut(s)…`);
+          const updated = { ...generatedData, data: result.revisedData };
+          setGeneratedData(updated);
+          sessionStorage.setItem('generatedResume', JSON.stringify(updated));
+          if (pass < 2) {
+            await new Promise((r) => setTimeout(r, 500));
+            await runRefinement(pass + 1);
+          }
+        }
+      } catch (e) {
+        console.error('Vision refinement failed:', e);
+      } finally {
+        setIsRefining(false);
+        setRefinementStatus('');
+      }
+    };
+
+    setTimeout(() => runRefinement(1), 800);
+  }, [generatedData]);
+
+  useEffect(() => {
     const titleElement = document.querySelector('title');
     const originalTitle = titleElement?.textContent || '';
 
@@ -128,47 +170,6 @@ export default function ResumePreviewPage() {
   }
 
   const { data, masterData, preferences, jobDescription } = generatedData;
-
-  useEffect(() => {
-    if (!generatedData || refinedRef.current || !preferences?.targetLength) return;
-    const targetLength = preferences.targetLength as '1-page' | '2-page';
-    refinedRef.current = true;
-
-    const runRefinement = async (pass: number) => {
-      const el = resumeElRef.current?.querySelector('.resume.show') as HTMLElement | null;
-      if (!el) return;
-      try {
-        setIsRefining(true);
-        setRefinementStatus(`Pass ${pass}: scanning page fit…`);
-        const targetPages = targetLength === '1-page' ? 1 : 2;
-        const screenshot = await captureResumeWithBoundary(el, targetPages);
-        setRefinementStatus(`Pass ${pass}: asking AI to review…`);
-        const res = await fetch('/api/refine-resume-vision', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ screenshot, resumeData: data, masterData, targetLength, jobDescription }),
-        });
-        const result = await res.json();
-        if (result.action !== 'ok' && result.revisedData) {
-          setRefinementStatus(`Pass ${pass}: applying ${result.cutsMade?.length ?? 0} cut(s)…`);
-          const updated = { ...generatedData, data: result.revisedData };
-          setGeneratedData(updated);
-          sessionStorage.setItem('generatedResume', JSON.stringify(updated));
-          if (pass < 2) {
-            await new Promise((r) => setTimeout(r, 400));
-            await runRefinement(pass + 1);
-          }
-        }
-      } catch (e) {
-        console.error('Vision refinement failed:', e);
-      } finally {
-        setIsRefining(false);
-        setRefinementStatus('');
-      }
-    };
-
-    setTimeout(() => runRefinement(1), 600);
-  }, [generatedData?.data?.resumeName]);
   
   console.log('Data structure:', {
     resumeName: data?.resumeName,
@@ -428,11 +429,11 @@ export default function ResumePreviewPage() {
                     </section>
                   )}
 
-                  {data.selectedProjects && data.selectedProjects.length > 0 && (
+                  {data.selectedProjects && data.selectedProjects.length > 0 && data.selectedProjects.some((id: string) => masterData.projects?.find((p: any) => p.id === id)) && (
                     <section>
                       <h2>Projects</h2>
                       {data.selectedProjects.map((projId: string) => {
-                        const project = masterData.projects.find((p: any) => p.id === projId);
+                        const project = masterData.projects?.find((p: any) => p.id === projId);
                         if (!project) return null;
 
                         return (
