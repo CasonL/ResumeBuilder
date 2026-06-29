@@ -29,6 +29,8 @@ export default function ResumePage({ params }: PageProps) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const [isRefining, setIsRefining] = useState(false);
   const [refinementStatus, setRefinementStatus] = useState('');
+  const [showFitPrompt, setShowFitPrompt] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
@@ -313,24 +315,21 @@ export default function ResumePage({ params }: PageProps) {
     setEditedData(cleanedData);
     setEditedMasterData(mergedMaster);
     setIsEditing(true);
-    // Scroll to top so the user sees the updated resume
+    setShowFitPrompt(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePrint = () => {
+  const doPrint = () => {
     const titleElement = document.querySelector('title');
     const originalTitle = titleElement?.textContent || '';
-    const printTitle = getPrintTitle();
-    
-    if (titleElement) titleElement.textContent = printTitle;
-    
+    if (titleElement) titleElement.textContent = getPrintTitle();
     setTimeout(() => {
       window.print();
-      setTimeout(() => {
-        if (titleElement) titleElement.textContent = originalTitle;
-      }, 100);
+      setTimeout(() => { if (titleElement) titleElement.textContent = originalTitle; }, 100);
     }, 50);
   };
+
+  const handlePrint = () => setShowPrintDialog(true);
 
   return (
     <div className="resume-viewer" data-editing={isEditing}>
@@ -405,6 +404,58 @@ export default function ResumePage({ params }: PageProps) {
           )}
         </div>
       </header>
+
+      {/* Post-chat fit prompt banner */}
+      {showFitPrompt && !isRefining && (
+        <div style={{ background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.35)', borderRadius: 8, margin: '10px 16px 0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span style={{ color: '#93c5fd', fontSize: 14, flex: 1 }}>✨ Resume updated! Want to trim weak bullets and fit it to <strong>1 page</strong>?</span>
+          <button
+            onClick={() => { setShowFitPrompt(false); handleFitToPage('1-page'); }}
+            style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(37,99,235,0.5)', color: '#93c5fd', borderRadius: 6, padding: '5px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+          >
+            Fit to 1 Page
+          </button>
+          <button
+            onClick={() => setShowFitPrompt(false)}
+            style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 13, padding: '5px 8px' }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Print confirmation dialog */}
+      {showPrintDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#1e222d', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: '28px 32px', maxWidth: 420, width: '90%', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🖨️</div>
+            <h3 style={{ color: '#f1f5f9', margin: '0 0 8px', fontSize: 18 }}>Before you print…</h3>
+            <p style={{ color: '#94a3b8', fontSize: 14, margin: '0 0 24px', lineHeight: 1.5 }}>
+              Would you like to automatically trim weaker bullets to fit this resume on <strong style={{ color: '#93c5fd' }}>1 page</strong> before printing?
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => { setShowPrintDialog(false); handleFitToPage('1-page').then(() => doPrint()); }}
+                style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(37,99,235,0.5)', color: '#93c5fd', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+              >
+                ✂️ Trim & Print
+              </button>
+              <button
+                onClick={() => { setShowPrintDialog(false); doPrint(); }}
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: '#cbd5e1', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontSize: 14 }}
+              >
+                Print as-is
+              </button>
+              <button
+                onClick={() => setShowPrintDialog(false)}
+                style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 13, width: '100%', marginTop: 4 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="layout-switcher" role="group" aria-label="Layout density">
         <button
