@@ -30,9 +30,7 @@ export default function ResumePage({ params }: PageProps) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const [isRefining, setIsRefining] = useState(false);
   const [refinementStatus, setRefinementStatus] = useState('');
-  const [showFitPrompt, setShowFitPrompt] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
-  const fitPromptDismissedAtRef = useRef<number>(0); // height when user last dismissed
   const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
@@ -319,12 +317,7 @@ export default function ResumePage({ params }: PageProps) {
     setIsEditing(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (triggerFit) {
-      // AI requested auto-fit — run immediately, skip the banner
-      setShowFitPrompt(false);
       setTimeout(() => handleFitToPage('1-page'), 400);
-    } else {
-      const currentH = estimateResumeHeight(baseData, baseMaster);
-      if (currentH > fitPromptDismissedAtRef.current) setShowFitPrompt(true);
     }
   };
 
@@ -404,32 +397,6 @@ export default function ResumePage({ params }: PageProps) {
           )}
         </div>
       </header>
-
-      {/* Post-chat fit prompt banner */}
-      {showFitPrompt && !isRefining && (
-        <div style={{ background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(37,99,235,0.35)', borderRadius: 8, margin: '10px 16px 0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <span style={{ color: '#93c5fd', fontSize: 14, flex: 1 }}>✨ Resume updated! Want to trim weak bullets and fit it to <strong>1 page</strong>?</span>
-          <button
-            onClick={() => { setShowFitPrompt(false); handleFitToPage('1-page'); }}
-            style={{ background: 'rgba(37,99,235,0.25)', border: '1px solid rgba(37,99,235,0.5)', color: '#93c5fd', borderRadius: 6, padding: '5px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-          >
-            Fit to 1 Page
-          </button>
-          <button
-            onClick={() => {
-              const h = estimateResumeHeight(
-                generatedResumeData?.data || editedData,
-                generatedResumeData?.masterData || editedMasterData
-              );
-              fitPromptDismissedAtRef.current = h;
-              setShowFitPrompt(false);
-            }}
-            style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 13, padding: '5px 8px' }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* Print confirmation dialog */}
       {showPrintDialog && (
