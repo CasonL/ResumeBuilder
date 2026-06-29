@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { estimateResumeHeight } from '@/lib/measureResumeLayout';
 import Link from 'next/link';
 import { mergeCustomizationsIntoMaster } from '@/lib/resume-editor-helpers';
 
@@ -31,6 +32,7 @@ export default function ResumePage({ params }: PageProps) {
   const [refinementStatus, setRefinementStatus] = useState('');
   const [showFitPrompt, setShowFitPrompt] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const fitPromptDismissedAtRef = useRef<number>(0); // height when user last dismissed
   const resumeContainerRef = useRef<HTMLDivElement>(null);
 
   const getPrintTitle = () => {
@@ -315,7 +317,9 @@ export default function ResumePage({ params }: PageProps) {
     setEditedData(cleanedData);
     setEditedMasterData(mergedMaster);
     setIsEditing(true);
-    setShowFitPrompt(true);
+    // Only prompt if resume is taller than when user last dismissed the prompt
+    const currentH = estimateResumeHeight(baseData, baseMaster);
+    if (currentH > fitPromptDismissedAtRef.current) setShowFitPrompt(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -416,7 +420,14 @@ export default function ResumePage({ params }: PageProps) {
             Fit to 1 Page
           </button>
           <button
-            onClick={() => setShowFitPrompt(false)}
+            onClick={() => {
+              const h = estimateResumeHeight(
+                generatedResumeData?.data || editedData,
+                generatedResumeData?.masterData || editedMasterData
+              );
+              fitPromptDismissedAtRef.current = h;
+              setShowFitPrompt(false);
+            }}
             style={{ background: 'transparent', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 13, padding: '5px 8px' }}
           >
             Dismiss
