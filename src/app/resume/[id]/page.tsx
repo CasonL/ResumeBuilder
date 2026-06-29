@@ -294,6 +294,7 @@ export default function ResumePage({ params }: PageProps) {
         // Pass 2 — re-measure in memory (pure calc, no DOM needed)
         const { measureResumeLayout: measure2 } = await import('@/lib/measureResumeLayout');
         const report2 = await measure2(el, updated, mData);
+        let finalData = updated;
         if (report2.overflowPx > 0) {
           setRefinementStatus(`Pass 2: ${report2.overflowPx}px over — asking AI…`);
           const res2 = await fetch('/api/refine-resume-vision', {
@@ -321,8 +322,16 @@ export default function ResumePage({ params }: PageProps) {
             }
             setRefinementStatus(`Pass 2: applying ${applied2} cut(s)…`);
             setGeneratedResumeData((prev: any) => ({ ...prev, data: current2 }));
+            finalData = current2;
           }
         }
+        // Save final trimmed data to DB so chat API reads the updated version
+        setRefinementStatus('saving…');
+        await fetch(`/api/resumes/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: finalData }),
+        });
       } else {
         setRefinementStatus('already fits ✔');
         await new Promise((r) => setTimeout(r, 1500));
