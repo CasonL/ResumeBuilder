@@ -1340,8 +1340,13 @@ aside h2:not(:first-of-type) {
   }
 
   .avoid-break {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .role-head {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   .grid {
